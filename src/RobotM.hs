@@ -15,7 +15,6 @@ module RobotM (
 import Control.Applicative
 import Control.Arrow
 import Control.Monad.Logic hiding (msum)
-import Control.Monad.Trans.List
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
 import Control.Monad.Identity hiding (msum)

@@ -17,8 +17,8 @@ import TexBase
 
 ----------------------------------------------------------------------------------------------------
 
-data Function = Function String                                             deriving (Eq, Ord, Show)
-data Predicate = Predicate String                                           deriving (Eq, Ord, Show)
+newtype Function = Function String                                             deriving (Eq, Ord, Show)
+newtype Predicate = Predicate String                                           deriving (Eq, Ord, Show)
 
 type ID = Int
 type HasBullet = Bool  --TODO: rename to isKey/hasDagger
@@ -236,7 +236,7 @@ mapDirectFormulaInStatementM fn (Statement n f ts) = return (Statement n) `ap` f
 
 
 eitherM :: Monad m => (a -> m a) -> (b -> m b) -> Either a b -> m (Either a b)
-eitherM f g = either (liftM Left . f) (liftM Right . g)
+eitherM f g = either (fmap Left . f) (fmap Right . g)
 
 --mapTableauM : deep (affacts all subtableau of given tableau)
 mapTableauM :: forall m. Monad m => (Tableau -> m Tableau) -> Tableau -> m Tableau
@@ -255,7 +255,7 @@ mapDirectVariableInTableauM fn (Tableau id vs hs t) =
                             `ap` mapM (mapDirectFormulaInStatementM $ mapDirectVariableInFormulaM fn) hs
                             `ap` inTargetM t where
     inTargetM :: Target -> m Target
-    inTargetM (Target ps) = liftM Target (mapM g ps) where
+    inTargetM (Target ps) = fmap Target (mapM g ps) where
         g :: Either Statement [Tableau] -> m (Either Statement [Tableau])
         g = eitherM (mapDirectFormulaInStatementM $ mapDirectVariableInFormulaM fn)
                     (mapM (mapDirectVariableInTableauM fn))
@@ -344,7 +344,7 @@ isAtomic (Not _) = True
 isAtomic (And fs) = True
 isAtomic (Or _) = True
 isAtomic (Forall _ _) = False
-isAtomic (UniversalImplies _ _ _) = False
+isAtomic UniversalImplies{} = False
 isAtomic (Exists _ _) = False
 
 isBulletedOrDiamonded :: Variable -> Bool

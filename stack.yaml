@@ -2,13 +2,13 @@
 # For more information, see: http://docs.haskellstack.org/en/stable/yaml_configuration/
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
-resolver: lts-7.11
+resolver: ghc-8.4.1
 
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
-extra-deps: []
+extra-deps: [QuickCheck-2.11.3, logict-0.6.0.2, random-1.1, tf-random-0.5, primitive-0.6.3.0]
 
 # Override default flag values for local packages and extra-deps
 flags: {}
@@ -32,4 +32,4 @@ extra-package-dbs: []
 # extra-lib-dirs: [/path/to/dir]
 
 # Allow a newer minor version of GHC than the snapshot specifies
-# compiler-check: newer-minor
+compiler-check: newer-minor

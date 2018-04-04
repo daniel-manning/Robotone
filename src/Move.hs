@@ -6,7 +6,6 @@ import Control.Applicative
 import Control.Arrow
 --import Control.Monad.RWS hiding (msum)
 --import Control.Monad.Logic hiding (msum)
-import Control.Monad.Trans.List
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Identity hiding (msum)
 --import Control.Monad
@@ -28,7 +27,7 @@ import Writeup
 
 
 data MoveDescription = MoveDescription [StatementName] [Clause] String
-data MoveType = MoveType (Tableau -> RobotM (MoveDescription, Tableau))
+newtype MoveType = MoveType (Tableau -> RobotM (MoveDescription, Tableau))
 
 movetypeFromSubmovetypes :: [MoveType] -> MoveType
 movetypeFromSubmovetypes ms = MoveType $ \t -> msum [f t | MoveType f <- ms]

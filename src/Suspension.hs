@@ -85,5 +85,5 @@ convertDiamondToBullet = tableauwise onTableau where
 
         return (MoveDescription [] [AssumeNow hs] $
                    "Replacing diamonds with bullets in " ++ texTN tN ++ ".",
-                s $ tableau')
+                s tableau')
     onTableau _ _ _ = mzero

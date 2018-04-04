@@ -43,10 +43,10 @@ orList [s] = s
 orList ss = intercalate ", " (init ss) ++ " or " ++ last ss
 
 instance Writeup Predicate where
-    writeup pd p = tex pd p
+    writeup = tex
 
 instance Writeup Function where
-    writeup pd f = tex pd f
+    writeup = tex
 
 writeupID :: ID -> String
 writeupID n = replicate (n-1) '\''
@@ -272,7 +272,7 @@ instance Writeup Adverb where
     writeup _ Thus = "thus"
 
 instance Writeup Unit where
-    writeup pd (Unit (Just a) cs@(Since _ _ _:_))
+    writeup pd (Unit (Just a) cs@(Since{}:_))
         | a /= IE = writeup pd a ++ ", " ++ writeup pd cs
     writeup pd (Unit (Just a) cs) = writeup pd a ++ " " ++ writeup pd cs
     writeup pd (Unit Nothing cs) = writeup pd cs
@@ -313,7 +313,7 @@ fuse :: [Clause] -> [Clause]
 fuse (c:cs@(c':c's)) = case fusePair c c' of
     Just f -> fuse $ f:c's
     Nothing -> c:fuse cs
-fuse (c:[]) = [c]
+fuse [c] = [c]
 fuse [] = []
 
 fusePair :: Clause -> Clause -> Maybe Clause
@@ -380,17 +380,17 @@ eliminate cs = zipWith4 convert factsDeducedInPrevClause factsDeclaredInPrevClau
 --convert: factsDeducedInPrevClause -> factsDeclaredInPrevClause -> twoBack -> ThisClause -> Unit
 convert :: [Statement] -> [Statement] -> [Statement] -> Clause -> Unit
 convert fs ls as (Since ss _ cs)
-    | all (`nameElem` (fs ++ ls ++ as)) ss && any (`nameElem` (fs ++ ls)) ss = Unit (Just Then) $ cs
+    | all (`nameElem` (fs ++ ls ++ as)) ss && any (`nameElem` (fs ++ ls)) ss = Unit (Just Then) cs
     | any (`nameElem` fs) ss = Unit (Just Therefore) [Since (filter (`nameNotElem` (fs ++ ls ++ as)) ss) False cs]
     | any (`nameElem` ls) ss = Unit (Just Then)      [Since (filter (`nameNotElem` (ls ++ as)) ss) False cs]
-    | all (`nameElem` as) ss = Unit (Just AndA) $ cs
+    | all (`nameElem` as) ss = Unit (Just AndA) cs
     | any (`nameElem` as) ss = Unit (Just AndA) [Since (filter (`nameNotElem` as) ss) False cs]
 convert fs ls as (ByDefSince ss _ cs)
-    | all (`nameElem` (ls ++ as)) ss && any (`nameElem` ls) ss = Unit (Just Then) $ cs
-    | all (`nameElem` (fs ++ ls ++ as)) ss && any (`nameElem` (fs ++ ls)) ss = Unit (Just IE) $ cs
+    | all (`nameElem` (ls ++ as)) ss && any (`nameElem` ls) ss = Unit (Just Then) cs
+    | all (`nameElem` (fs ++ ls ++ as)) ss && any (`nameElem` (fs ++ ls)) ss = Unit (Just IE) cs
     | any (`nameElem` fs) ss = Unit (Just Therefore) [ByDefSince (filter (`nameNotElem` (fs ++ ls ++ as)) ss) False cs]
     | any (`nameElem` ls) ss = Unit (Just Then)      [ByDefSince (filter (`nameNotElem` (ls ++ as)) ss) False cs]
-    | all (`nameElem` as) ss = Unit (Just AndA) $ cs
+    | all (`nameElem` as) ss = Unit (Just AndA) cs
     | any (`nameElem` as) ss = Unit (Just AndA) [ByDefSince (filter (`nameNotElem` as) ss) False cs]
 convert fs ls as c = Unit Nothing [c]
 

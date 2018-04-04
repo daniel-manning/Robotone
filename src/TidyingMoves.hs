@@ -425,7 +425,7 @@ rewriteEquality extract = tableauwise onTableau  where
             rewriteTableau = return . mapFormulaInTableau (rewrite t v)
 
         let g :: Either Statement [Tableau] -> RobotM (Either Statement [Tableau])
-            g = either (liftM Left . rewriteStatement STTarget) (liftM Right . mapM rewriteTableau)
+            g = either (fmap Left . rewriteStatement STTarget) (fmap Right . mapM rewriteTableau)
 
         hs' <- mapM (rewriteStatement STHypothesis) $ context []
         --remove any duplicates of old hypotheses
