@@ -15,7 +15,7 @@ import Network.Wai.Handler.Warp
 import System.IO
 import Servant.HTML.Blaze
 import qualified Text.Blaze.Html5   as H
-import Text.Blaze.Html5.Attributes
+import Text.Blaze.Html5.Attributes as A
 --import Text.JSON.Generic hiding (JSON)
 import Data.Aeson
 
@@ -54,6 +54,18 @@ data Library =
 instance ToJSON Library where
     toJSON (Library libraryID description premises conclusion) = object ["id" .= libraryID, "description" .= description, "premises" .= premises, "conclusion" .= conclusion]
 
+data Problem =
+  Problem{
+    problemID::Integer,
+    problemDescription::String,
+    problemPremises::[String],
+    problemConclusion::String
+  }
+  deriving (Eq, Show, Read)
+
+instance ToJSON Problem where
+    toJSON (Problem problemID description premises conclusion) = object ["id" .= problemID, "description" .= description, "premises" .= premises, "conclusion" .= conclusion]
+
 type Homepage = H.Html
 
 --ROUTES
@@ -64,7 +76,9 @@ type Api =
   "rewrites" :> Get '[JSON] [Rewrite] :<|>
   "rewrites" :> Post '[JSON] Rewrite :<|>
   "library" :> Get '[JSON] [Library] :<|>
-  "library" :> Post '[JSON] Library
+  "library" :> Post '[JSON] Library :<|>
+  "problem" :> Get '[JSON] [Problem] :<|>
+  "problem" :> Post '[JSON] Problem
 
 itemApi :: Proxy Api
 itemApi = Proxy
@@ -90,7 +104,9 @@ server =
   getRewrites :<|>
   postRewrite :<|>
   getLibrary :<|>
-  postLibrary
+  postLibrary:<|>
+  getProblem :<|>
+  postProblem
 
 --REST METHODS
 getHomePage :: Handler Homepage
@@ -98,12 +114,21 @@ getHomePage = return home
 
 home :: Homepage
 home = H.docTypeHtml $ do
-          H.head $ do
-            H.title "MathJax TeX Test Page"
-            H.script H.! type_ "text/x-mathjax-config" $ "MathJax.Hub.Config({ tex2jax: {inlineMath: [[\"$\",\"$\"],[\"\\\\(\",\"\\\\)\"]]}});"
-            H.script H.! src "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML-full" $ ""
-          H.body $ do
-            H.p "When $a \\ne 0$, there are two solutions to \\(ax^2 + bx + c = 0\\) and they are $$x = {-b \\pm \\sqrt{b^2-4ac} \\over 2a}.$$"
+           H.head $ do
+               H.title "MathJax Test Page"
+               H.meta H.! A.httpEquiv "Content-Type" H.! A.content "text/html; charset=UTF-8"
+               H.meta H.! A.httpEquiv "X-UA-Compatible" H.! A.content "IE=edge"
+               H.meta H.! A.name "viewport" H.! A.content "width=device-width, initial-scale=1"
+               H.script H.! src "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML-full" $ ""
+               H.script H.! type_ "text/javascript" H.! A.src "https://code.jquery.com/jquery-3.3.1.min.js" $ "<script type=\"text/x-mathjax-config\">\n  MathJax.Hub.Config({\n    extensions: [\"tex2jax.js\"],\n    jax: [\"input/TeX\",\"output/HTML-CSS\"],\n    tex2jax: {inlineMath: [[\"$\",\"$\"],[\"\\\\(\",\"\\\\)\"]]}\n  });"
+           H.body $ do
+               H.form H.! A.class_ "problem" $ do
+                   H.input H.! A.id "problem" H.! name "problem" H.! A.type_ "text"
+                   H.input H.! A.id "problem-button" H.! A.type_ "button"
+               H.h2 "Problem"
+               H.div H.! A.id "problem-spec" $ mempty
+               H.script "$(document).on('submit', 'form.problem', function(){ $.ajax({\n  url: \"/problem\",\n  data: $(\"#problem\").contents(),\n  success: function( result ) {\n    str = JSON.stringify(result);\n  }})});\n$(document).on('click', '#problem-button', function(){ $.ajax({\n    url: \"/problem\",\n    data: $(\"#problem\").contents(),\n    success: function( result ) {\n    str = JSON.stringify(result);\n $( \"#problem-spec\" ).html(\"<h3>\"+result.description+\"</h3><p>Premises: \"+result.premises+\"</p><p>Conclusion: \"+result.conclusion);\n},\n    error: function( result ) {\n str = JSON.stringify(result);\n   }})});"
+
 
 getExpansions :: Handler [Expansion]
 getExpansions = return [Expansion 1 "sequencein(an,intersect(A,B))" "sequencein(an,A) & sequencein(an,B)"]
@@ -122,3 +147,9 @@ getLibrary = return [Library 1 "" ["subsetof(A,B)", "subsetof(B,C)"] "subsetof(A
 
 postLibrary :: Handler Library
 postLibrary = return $ Library 1 "" ["subsetof(A,B)", "subsetof(B,C)"] "subsetof(A,C)"
+
+getProblem :: Handler [Problem]
+getProblem = return [Problem 1 "" ["subsetof(A,B)", "subsetof(B,C)"] "subsetof(A,C)"]
+
+postProblem :: Handler Problem
+postProblem = return $ Problem 1 "" ["subsetof(A,B)", "subsetof(B,C)"] "subsetof(A,C)"
