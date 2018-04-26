@@ -119,15 +119,31 @@ home = H.docTypeHtml $ do
                H.meta H.! A.httpEquiv "Content-Type" H.! A.content "text/html; charset=UTF-8"
                H.meta H.! A.httpEquiv "X-UA-Compatible" H.! A.content "IE=edge"
                H.meta H.! A.name "viewport" H.! A.content "width=device-width, initial-scale=1"
+               H.style H.! A.type_ "text/css" $ "#workspace { float:left; width:70%; }\n #equational-helpers {float: right; width:30%;}"
                H.script H.! src "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML-full" $ ""
                H.script H.! type_ "text/javascript" H.! A.src "https://code.jquery.com/jquery-3.3.1.min.js" $ "<script type=\"text/x-mathjax-config\">\n  MathJax.Hub.Config({\n    extensions: [\"tex2jax.js\"],\n    jax: [\"input/TeX\",\"output/HTML-CSS\"],\n    tex2jax: {inlineMath: [[\"$\",\"$\"],[\"\\\\(\",\"\\\\)\"]]}\n  });"
            H.body $ do
-               H.form H.! A.class_ "problem" $ do
-                   H.input H.! A.id "problem" H.! name "problem" H.! A.type_ "text"
-                   H.input H.! A.id "problem-button" H.! A.type_ "button"
-               H.h2 "Problem"
-               H.div H.! A.id "problem-spec" $ mempty
-               H.script "$(document).on('submit', 'form.problem', function(){ $.ajax({\n  url: \"/problem\",\n  data: $(\"#problem\").contents(),\n  success: function( result ) {\n    str = JSON.stringify(result);\n  }})});\n$(document).on('click', '#problem-button', function(){ $.ajax({\n    url: \"/problem\",\n    data: $(\"#problem\").contents(),\n    success: function( result ) {\n    str = JSON.stringify(result);\n $( \"#problem-spec\" ).html(\"<h3>\"+result.description+\"</h3><p>Premises: \"+result.premises+\"</p><p>Conclusion: \"+result.conclusion);\n},\n    error: function( result ) {\n str = JSON.stringify(result);\n   }})});"
+               H.div H.! A.id "workspace" $ do
+                 H.form H.! A.class_ "problem" $ do
+                     H.input H.! A.id "problem" H.! name "problem" H.! A.type_ "text"
+                     H.input H.! A.id "problem-button" H.! A.type_ "button"
+                 H.h2 "Problem"
+                 H.div H.! A.id "problem-spec" $ mempty
+                 H.div H.! A.id "problem-expansion" $ mempty
+               H.div H.! A.id "equational-helpers" $ do
+                 H.form H.! A.class_ "expansions" $ do
+                     H.input H.! A.id "expansions" H.! name "expansions" H.! A.type_ "text"
+                     H.input H.! A.id "expansions-button" H.! A.type_ "button"
+                 H.div H.! A.id "expansions-spec" $ mempty
+                 H.form H.! A.class_ "rewrites" $ do
+                     H.input H.! A.id "rewrites" H.! name "rewrites" H.! A.type_ "text"
+                     H.input H.! A.id "rewrites-button" H.! A.type_ "button"
+                 H.div H.! A.id "rewrites-spec" $ mempty
+                 H.form H.! A.class_ "library" $ do
+                     H.input H.! A.id "library" H.! name "library" H.! A.type_ "text"
+                     H.input H.! A.id "library-button" H.! A.type_ "button"
+                 H.div H.! A.id "library-spec" $ mempty
+               H.script "$(document).on('click', '#problem-button', function(){ $.ajax({\n    url: \"/problem\",\n    data: $(\"#problem\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n $( \"#problem-spec\" ).html(result[0].premises+\" | \"+result[0].conclusion);\n},\n    error: function( result ) {\n    alert('hello-error');\n    str = JSON.stringify(result);\n    alert(str);\n    }})}); \n $(document).on('click', '#expansions-button', function(){ $.ajax({\n    url: \"/expansions\",\n    data: $(\"#expansions\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n $( \"#expansions-spec\" ).html(result[0].premises+\" | \"+result[0].conclusion);\n},\n    error: function( result ) {\n    alert('hello-error');\n    str = JSON.stringify(result);\n    alert(str);\n    }})}); \n $(document).on('click', '#rewrites-button', function(){ $.ajax({\n    url: \"/rewrites\",\n    data: $(\"#rewrites\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n $( \"#rewrites-spec\" ).html(result[0].premises+\" | \"+result[0].conclusion);\n},\n    error: function( result ) {\n    alert('hello-error');\n    str = JSON.stringify(result);\n    alert(str);\n    }})}); \n $(document).on('click', '#library-button', function(){ $.ajax({\n    url: \"/library\",\n    data: $(\"#library\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n $( \"#library-spec\" ).html(result[0].premises+\" | \"+result[0].conclusion);\n},\n    error: function( result ) {\n    alert('hello-error');\n    str = JSON.stringify(result);\n    alert(str);\n    }})});"
 
 
 getExpansions :: Handler [Expansion]
