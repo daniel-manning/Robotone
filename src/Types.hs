@@ -1,5 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Types where
 
@@ -12,8 +14,60 @@ import Control.Monad.Writer.Lazy (Writer, tell, runWriter, writer)
 import Data.Monoid
 import Data.List
 import Debug.Trace
+import Data.Aeson
+import GHC.Generics
 
 import TexBase
+
+----------------------------------------------------------------------------------------------------
+--STORAGE TYPES
+data ExpansionRecord =
+  ExpansionRecord{
+    expansionId::Integer,
+    expansionFrom::String,
+    expansionTo::String
+  }
+  deriving (Eq, Show, Read, Generic)
+
+instance FromJSON ExpansionRecord
+instance ToJSON ExpansionRecord
+
+data RewriteRecord =
+  RewriteRecord{
+    rewriteId::Integer,
+    rewriteFrom::String,
+    rewriteTo::String
+  }
+  deriving (Eq, Show, Read, Generic)
+
+instance FromJSON RewriteRecord
+instance ToJSON RewriteRecord
+
+data LibraryRecord =
+  LibraryRecord{
+    libraryID::Integer,
+    description::String,
+    premises::[String],
+    conclusion::String
+  }
+  deriving (Eq, Show, Read, Generic)
+
+instance FromJSON LibraryRecord
+instance ToJSON LibraryRecord where
+    toJSON (LibraryRecord libraryID description premises conclusion) = object ["id" .= libraryID, "description" .= description, "premises" .= premises, "conclusion" .= conclusion]
+
+data ProblemRecord =
+  ProblemRecord{
+    problemID::Integer,
+    problemDescription::String,
+    problemPremises::[String],
+    problemConclusion::String
+  }
+  deriving (Eq, Show, Read, Generic)
+
+instance FromJSON ProblemRecord
+instance ToJSON ProblemRecord where
+    toJSON (ProblemRecord problemID description premises conclusion) = object ["id" .= problemID, "description" .= description, "premises" .= premises, "conclusion" .= conclusion]
 
 ----------------------------------------------------------------------------------------------------
 

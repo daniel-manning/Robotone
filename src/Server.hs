@@ -9,6 +9,12 @@ module Server (
   runServer
 ) where
 
+import Database
+import Database.HDBC
+import Database.HDBC.Sqlite3
+--import Control.Monad.Trans.Either
+import Control.Monad.IO.Class
+import Control.Concurrent
 import Servant
 import Network.Wai
 import Network.Wai.Handler.Warp
@@ -18,71 +24,26 @@ import qualified Text.Blaze.Html5   as H
 import Text.Blaze.Html5.Attributes as A
 --import Text.JSON.Generic hiding (JSON)
 import Data.Aeson
+import GHC.Generics
+import Types
 
---TYPES
-data Expansion =
-  Expansion{
-    expansionID::Integer,
-    expansionFrom::String,
-    expansionTo::String
-  }
-  deriving (Eq, Show, Read)
-
-instance ToJSON Expansion where
-    toJSON (Expansion expansionID expansionFrom expansionTo) = object ["id" .= expansionID, "from" .= expansionFrom, "to" .= expansionFrom]
-
-data Rewrite =
-  Rewrite{
-    rewriteID::Integer,
-    rewriteFrom::String,
-    rewriteTo::String
-  }
-  deriving (Eq, Show, Read)
-
-instance ToJSON Rewrite where
-    toJSON (Rewrite rewriteID rewriteFrom rewriteTo) = object ["id" .= rewriteID, "from" .= rewriteFrom, "to" .= rewriteTo]
-
-data Library =
-  Library{
-    libraryID::Integer,
-    description::String,
-    premises::[String],
-    conclusion::String
-  }
-  deriving (Eq, Show, Read)
-
-instance ToJSON Library where
-    toJSON (Library libraryID description premises conclusion) = object ["id" .= libraryID, "description" .= description, "premises" .= premises, "conclusion" .= conclusion]
-
-data Problem =
-  Problem{
-    problemID::Integer,
-    problemDescription::String,
-    problemPremises::[String],
-    problemConclusion::String
-  }
-  deriving (Eq, Show, Read)
-
-instance ToJSON Problem where
-    toJSON (Problem problemID description premises conclusion) = object ["id" .= problemID, "description" .= description, "premises" .= premises, "conclusion" .= conclusion]
 
 type Homepage = H.Html
 
 --ROUTES
 type Api =
   "home" :> Get '[HTML] Homepage :<|>
-  "expansions" :> Get '[JSON] [Expansion] :<|>
-  "expansions" :> Post '[JSON] Expansion :<|>
-  "rewrites" :> Get '[JSON] [Rewrite] :<|>
-  "rewrites" :> Post '[JSON] Rewrite :<|>
-  "library" :> Get '[JSON] [Library] :<|>
-  "library" :> Post '[JSON] Library :<|>
-  "problem" :> Get '[JSON] [Problem] :<|>
-  "problem" :> Post '[JSON] Problem
+  "expansions" :> Get '[JSON] [ExpansionRecord] :<|>
+  "expansions" :> ReqBody '[JSON] ExpansionRecord :> Post '[JSON] ExpansionRecord :<|>
+  "rewrites" :> Get '[JSON] [RewriteRecord] :<|>
+  "rewrites" :> ReqBody '[JSON] RewriteRecord :> Post '[JSON] RewriteRecord :<|>
+  "library" :> Get '[JSON] [LibraryRecord] :<|>
+  "library" :> ReqBody '[JSON] LibraryRecord :> Post '[JSON] LibraryRecord :<|>
+  "problem" :> Get '[JSON] [ProblemRecord] :<|>
+  "problem" :> ReqBody '[JSON] ProblemRecord :> Post '[JSON] ProblemRecord
 
 itemApi :: Proxy Api
 itemApi = Proxy
-
 
 runServer:: IO ()
 runServer = do
@@ -94,19 +55,45 @@ runServer = do
  runSettings settings =<< mkApp
 
 mkApp :: IO Application
-mkApp = return $ serve itemApi server
+mkApp = do
+    dbh <- connect "maths.db"
+    return $ serve itemApi $ server dbh
 
-server :: Server Api
-server =
+server :: IConnection conn => conn -> Server Api
+server dbh =
   getHomePage :<|>
   getExpansions :<|>
   postExpansion :<|>
   getRewrites :<|>
   postRewrite :<|>
   getLibrary :<|>
-  postLibrary:<|>
+  postLibrary :<|>
   getProblem :<|>
   postProblem
+  where
+    getExpansions :: Handler [ExpansionRecord]
+    getExpansions = liftIO $ getExpansionRecords dbh
+
+    postExpansion :: ExpansionRecord -> Handler ExpansionRecord
+    postExpansion expansion = liftIO $ addExpansion dbh expansion
+
+    getRewrites :: Handler [RewriteRecord]
+    getRewrites = liftIO $ getRewriteRecords dbh
+
+    postRewrite ::RewriteRecord -> Handler RewriteRecord
+    postRewrite rewrite = liftIO $ addRewrite dbh rewrite
+
+    getLibrary :: Handler [LibraryRecord]
+    getLibrary = liftIO $ getLibraryRecords dbh
+
+    postLibrary :: LibraryRecord -> Handler LibraryRecord
+    postLibrary library = liftIO $ addLibrary dbh library
+
+    getProblem :: Handler [ProblemRecord]
+    getProblem = liftIO $ getProblemRecords dbh
+
+    postProblem :: ProblemRecord -> Handler ProblemRecord
+    postProblem problem = liftIO $ addProblem dbh problem
 
 --REST METHODS
 getHomePage :: Handler Homepage
@@ -153,26 +140,4 @@ home = H.docTypeHtml $ do
               H.script "$(\":header\").click(function(event){\n     //alert($(event.currentTarget).siblings(\"form\").innerHTML);\n     //$(event.currentTarget).siblings(\"form\").toggleClass(\"hidden\");\n     $( \".bordered-rightcol form\" ).toggleClass(\"hidden\");\n   });\n\n $(document).on('click', '#problem-button', function(){ $.ajax({\n    url: \"/problem\",\n    data: $(\"#problem\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n\n $( \"#problem-spec\" ).html(result[0].premises+\" | \"+result[0].conclusion);\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#expansions-button', function(){ $.ajax({\n    url: \"/expansions\",\n    data: $(\"#expansions\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n $( \"#expansions-spec\" ).html(result[0].from+\" | \"+result[0].to);\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#rewrites-button', function(){ $.ajax({\n    url: \"/rewrites\",\n    data: $(\"#rewrites\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n $( \"#rewrites-spec\" ).html(result[0].from+\" | \"+result[0].to);\n},\n    error: function( result ) {\n  str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#library-button', function(){ $.ajax({\n    url: \"/library\",\n    data: $(\"#library\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n $( \"#library-spec\" ).html(result[0].premises+\" | \"+result[0].conclusion);\n},\n    error: function( result ) {\n   str = JSON.stringify(result);\n    alert(str);\n    }})});"
 
 
-getExpansions :: Handler [Expansion]
-getExpansions = return [Expansion 1 "sequencein(an,intersect(A,B))" "sequencein(an,A) & sequencein(an,B)"]
 
-postExpansion :: Handler Expansion
-postExpansion = return $ Expansion 1 "sequencein(an,intersect(A,B))" "sequencein(an,A) & sequencein(an,B)"
-
-getRewrites :: Handler [Rewrite]
-getRewrites = return [Rewrite 1 "applyfn(compose(f,g),x)" "applyfn(f,applyfn(g,x))"]
-
-postRewrite :: Handler Rewrite
-postRewrite = return $ Rewrite 1 "applyfn(compose(f,g),x)" "applyfn(f,applyfn(g,x))"
-
-getLibrary :: Handler [Library]
-getLibrary = return [Library 1 "" ["subsetof(A,B)", "subsetof(B,C)"] "subsetof(A,C)"]
-
-postLibrary :: Handler Library
-postLibrary = return $ Library 1 "" ["subsetof(A,B)", "subsetof(B,C)"] "subsetof(A,C)"
-
-getProblem :: Handler [Problem]
-getProblem = return [Problem 1 "" ["subsetof(A,B)", "subsetof(B,C)"] "subsetof(A,C)"]
-
-postProblem :: Handler Problem
-postProblem = return $ Problem 1 "" ["subsetof(A,B)", "subsetof(B,C)"] "subsetof(A,C)"
