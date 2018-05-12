@@ -46,9 +46,9 @@ instance ToJSON RewriteRecord
 data LibraryRecord =
   LibraryRecord{
     libraryID::Integer,
-    description::String,
-    premises::[String],
-    conclusion::String
+    libraryDescription::String,
+    libraryPremises::[String],
+    libraryConclusion::String
   }
   deriving (Eq, Show, Read, Generic)
 
