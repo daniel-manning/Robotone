@@ -13,6 +13,7 @@ import Database
 import Database.HDBC
 import Database.HDBC.Sqlite3
 --import Control.Monad.Trans.Either
+import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
 import Control.Concurrent
 import Servant
@@ -26,6 +27,7 @@ import Text.Blaze.Html5.Attributes as A
 import Data.Aeson
 import GHC.Generics
 import Types
+import Data.Maybe
 
 
 type Homepage = H.Html
@@ -113,7 +115,12 @@ home = H.docTypeHtml $ do
               H.div H.! A.id "tabletop" H.! class_ "minwidth" $ do
                   H.div H.! A.id "workspace" H.! class_ "bordered" $ do
                       H.form H.! A.class_ "problem" $ do
-                          H.input H.! A.id "problem" H.! name "problem" H.! type_ "text"
+                          H.label H.! for "problem-description" $ "Description:"
+                          H.input H.! A.id "problem-description" H.! name "problem-description" H.! type_ "text"
+                          H.label H.! for "problem-premises" $ "Premises:"
+                          H.input H.! A.id "problem-premises" H.! name "problem-premises" H.! type_ "text"
+                          H.label H.! for "problem-conclusion" $ "Conclusion:"
+                          H.input H.! A.id "problem-conclusion" H.! name "problem-conclusion" H.! type_ "text"
                           H.input H.! A.id "problem-button" H.! type_ "button"
                       H.h2 "Problem"
                       H.div H.! A.id "problem-spec" $ mempty
@@ -122,22 +129,33 @@ home = H.docTypeHtml $ do
                       H.div H.! A.id "expansions-container" H.! class_ "bordered-rightcol" $ do
                           H.div H.! class_ "title" $ H.h2 "Expansions"
                           H.form H.! A.id "expansions" H.! class_ "hidden" $ do
-                              H.input H.! A.id "expansions" H.! name "expansions" H.! type_ "text"
+                              H.label H.! for "expansionFrom" $ "From:"
+                              H.input H.! A.id "expansionFrom" H.! name "expansionFrom" H.! type_ "text"
+                              H.label H.! for "expansionTo" $ "To:"
+                              H.input H.! A.id "expansionTo" H.! name "expansionTo" H.! type_ "text"
                               H.input H.! A.id "expansions-button" H.! type_ "button"
                           H.div H.! A.id "expansions-spec" $ mempty
                       H.div H.! A.id "rewrites-container" H.! class_ "bordered-rightcol" $ do
                           H.div H.! class_ "title" $ H.h2 "Rewrites"
                           H.form H.! A.id "rewrites" H.! class_ "hidden" $ do
-                              H.input H.! A.id "rewrites" H.! name "rewrites" H.! type_ "text"
+                              H.label H.! for "rewriteFrom" $ "From:"
+                              H.input H.! A.id "rewriteFrom" H.! name "rewriteFrom" H.! type_ "text"
+                              H.label H.! for "rewriteTo" $ "To:"
+                              H.input H.! A.id "rewriteTo" H.! name "rewriteTo" H.! type_ "text"
                               H.input H.! A.id "rewrites-button" H.! type_ "button"
                           H.div H.! A.id "rewrites-spec" $ mempty
                       H.div H.! A.id "library-container" H.! class_ "bordered-rightcol" $ do
                           H.div H.! class_ "title" $ H.h2 "Library"
                           H.form H.! A.id "library" H.! class_ "hidden" $ do
-                              H.input H.! A.id "library" H.! name "library" H.! type_ "text"
+                              H.label H.! for "libraryDescription" $ "Description:"
+                              H.input H.! A.id "libraryDescription" H.! name "libraryDescription" H.! type_ "text"
+                              H.label H.! for "libraryPremises" $ "Premises:"
+                              H.input H.! A.id "libraryPremises" H.! name "libraryPremises" H.! type_ "text"
+                              H.label H.! for "libraryConclusion" $ "Conclusion:"
+                              H.input H.! A.id "libraryConclusion" H.! name "libraryConclusion" H.! type_ "text"
                               H.input H.! A.id "library-button" H.! type_ "button"
                           H.div H.! A.id "library-spec" $ mempty
-              H.script "$(\":header\").click(function(event){\n     //alert($(event.currentTarget).siblings(\"form\").innerHTML);\n     //$(event.currentTarget).siblings(\"form\").toggleClass(\"hidden\");\n     $( \".bordered-rightcol form\" ).toggleClass(\"hidden\");\n   });\n\n $(document).on('click', '#problem-button', function(){ $.ajax({\n    url: \"/problem\",\n    data: $(\"#problem\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n\n $( \"#problem-spec\" ).html(result[0].premises+\" | \"+result[0].conclusion);\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#expansions-button', function(){ $.ajax({\n    url: \"/expansions\",\n    data: $(\"#expansions\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n $( \"#expansions-spec\" ).html(result[0].from+\" | \"+result[0].to);\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#rewrites-button', function(){ $.ajax({\n    url: \"/rewrites\",\n    data: $(\"#rewrites\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n $( \"#rewrites-spec\" ).html(result[0].from+\" | \"+result[0].to);\n},\n    error: function( result ) {\n  str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#library-button', function(){ $.ajax({\n    url: \"/library\",\n    data: $(\"#library\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n $( \"#library-spec\" ).html(result[0].premises+\" | \"+result[0].conclusion);\n},\n    error: function( result ) {\n   str = JSON.stringify(result);\n    alert(str);\n    }})});"
+              H.script "$(\":header\").click(function(event){\n     //alert($(event.currentTarget).siblings(\"form\").innerHTML);\n     //$(event.currentTarget).siblings(\"form\").toggleClass(\"hidden\");\n     $( \".bordered-rightcol form\" ).toggleClass(\"hidden\");\n   });\n\n $(document).on('click', '#problem-button', function(){ $.ajax({\n    url: \"/problem\",\n    data: $(\"#problem\").contents(),\n    success: function( result ) {\n  str = JSON.stringify(result);\n\n $( \"#problem-spec\" ).html(result[0].premises+\" | \"+result[0].conclusion);\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#expansions-button', function(){ alert(createJsonObject(\"#expansions\")); $.ajax({\n   headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, type: \"POST\",\n url: \"/expansions\",\n    data: createJsonObject(\"#expansions\"),\n dataType: \"json\",\n success: function( result ) {\n  $( \"#expansions-spec\" ).html(result.expansionFrom+\" | \"+result.expansionTo);\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert('error: ' + str);\n    }})}); \n \n $(document).on('click', '#rewrites-button', function(){ $.ajax({\n headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, url: \"/rewrites\",\n type: \"POST\",\n   data: createJsonObject(\"#rewrites\"),\n dataType: \"json\",\n    success: function( result ) {\n  console.log(result); $( \"#rewrites-spec\" ).html(result.rewriteFrom+\" | \"+result.rewriteTo);\n},\n    error: function( result ) {\n  str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#library-button', function(){ $.ajax({\n  headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, type: \"POST\",\n url: \"/library\",\n    data: createJsonObjectWithArray(\"#library\"),\n dataType: \"json\",\n   success: function( result ) {\n console.log(result); $( \"#library-spec\" ).html(result.premises+\" | \"+result.conclusion);\n},\n    error: function( result ) {\n   str = JSON.stringify(result);\n    alert(str);\n    }})});\n function createJsonObject(formName){\n var arr = $(formName).serializeArray();\n var json = {};\n jQuery.each(arr, function() {\n json[this.name] = this.value || '';\n });\n var json_string = JSON.stringify(json);\n json_string.replace(/(\\s*?{\\s*?|\\s*?,\\s*?)(['\"])?([a-zA-Z0-9]+)(['\"])?:/g, '$1\"$3\":');\n return json_string;\n } \n function createJsonObjectWithArray(formName){\n var arr = $(formName).serializeArray();\n var json = {};\n jQuery.each(arr, function() {\n json[this.name] = this.value || '';\n });\n var json_string = JSON.stringify(json);\n json_string.replace(/(\\s*?{\\s*?|\\s*?,\\s*?)(['\"])?([a-zA-Z0-9]+)(['\"])?:/g, '$1\"$3\":');\n eval('var jsonO = new Object(' + json_string + ')'); jsonO.libraryPremises = jsonO.libraryPremises.split(\"@\"); \n var json_edit_string = JSON.stringify(jsonO);\n return json_edit_string;\n }"
 
 
 

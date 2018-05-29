@@ -23,7 +23,6 @@ import TexBase
 --STORAGE TYPES
 data ExpansionRecord =
   ExpansionRecord{
-    expansionId::Integer,
     expansionFrom::String,
     expansionTo::String
   }
@@ -34,7 +33,6 @@ instance ToJSON ExpansionRecord
 
 data RewriteRecord =
   RewriteRecord{
-    rewriteId::Integer,
     rewriteFrom::String,
     rewriteTo::String
   }
@@ -45,7 +43,6 @@ instance ToJSON RewriteRecord
 
 data LibraryRecord =
   LibraryRecord{
-    libraryID::Integer,
     libraryDescription::String,
     libraryPremises::[String],
     libraryConclusion::String
@@ -54,11 +51,10 @@ data LibraryRecord =
 
 instance FromJSON LibraryRecord
 instance ToJSON LibraryRecord where
-    toJSON (LibraryRecord libraryID description premises conclusion) = object ["id" .= libraryID, "description" .= description, "premises" .= premises, "conclusion" .= conclusion]
+    toJSON (LibraryRecord description premises conclusion) = object ["description" .= description, "premises" .= premises, "conclusion" .= conclusion]
 
 data ProblemRecord =
   ProblemRecord{
-    problemID::Integer,
     problemDescription::String,
     problemPremises::[String],
     problemConclusion::String
@@ -67,7 +63,7 @@ data ProblemRecord =
 
 instance FromJSON ProblemRecord
 instance ToJSON ProblemRecord where
-    toJSON (ProblemRecord problemID description premises conclusion) = object ["id" .= problemID, "description" .= description, "premises" .= premises, "conclusion" .= conclusion]
+    toJSON (ProblemRecord description premises conclusion) = object ["description" .= description, "premises" .= premises, "conclusion" .= conclusion]
 
 ----------------------------------------------------------------------------------------------------
 
