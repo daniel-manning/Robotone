@@ -34,7 +34,7 @@ type Homepage = H.Html
 
 --ROUTES
 type Api =
-  "home" :> Get '[HTML] Homepage :<|>
+  {-"home" :> Get '[HTML] Homepage :<|>-}
   "expansions" :> Get '[JSON] [ExpansionRecord] :<|>
   "expansions" :> ReqBody '[JSON] ExpansionRecord :> Post '[JSON] ExpansionRecord :<|>
   "rewrites" :> Get '[JSON] [RewriteRecord] :<|>
@@ -42,7 +42,9 @@ type Api =
   "library" :> Get '[JSON] [LibraryRecord] :<|>
   "library" :> ReqBody '[JSON] LibraryRecord :> Post '[JSON] LibraryRecord :<|>
   "problem" :> Get '[JSON] [ProblemRecord] :<|>
-  "problem" :> ReqBody '[JSON] ProblemRecord :> Post '[JSON] ProblemRecord
+  "problem" :> ReqBody '[JSON] ProblemRecord :> Post '[JSON] ProblemRecord :<|>
+  Raw
+
 
 itemApi :: Proxy Api
 itemApi = Proxy
@@ -63,7 +65,7 @@ mkApp = do
 
 server :: IConnection conn => conn -> Server Api
 server dbh =
-  getHomePage :<|>
+  {-getHomePage :<|>-}
   getExpansions :<|>
   postExpansion :<|>
   getRewrites :<|>
@@ -71,7 +73,8 @@ server dbh =
   getLibrary :<|>
   postLibrary :<|>
   getProblem :<|>
-  postProblem
+  postProblem :<|>
+  staticServer
   where
     getExpansions :: Handler [ExpansionRecord]
     getExpansions = liftIO $ getExpansionRecords dbh
@@ -97,7 +100,11 @@ server dbh =
     postProblem :: ProblemRecord -> Handler ProblemRecord
     postProblem problem = liftIO $ addProblem dbh problem
 
+    staticServer :: ServerT Raw m
+    staticServer = serveDirectoryWebApp "static-files"
+
 --REST METHODS
+{-
 getHomePage :: Handler Homepage
 getHomePage = return home
 
@@ -155,7 +162,8 @@ home = H.docTypeHtml $ do
                               H.input H.! A.id "libraryConclusion" H.! name "libraryConclusion" H.! type_ "text"
                               H.input H.! A.id "library-button" H.! type_ "button"
                           H.div H.! A.id "library-spec" $ mempty
-              H.script "$(\":header\").click(function(event){\n     //alert($(event.currentTarget).siblings(\"form\").innerHTML);\n     //$(event.currentTarget).siblings(\"form\").toggleClass(\"hidden\");\n     $( \".bordered-rightcol form\" ).toggleClass(\"hidden\");\n   });\n\n $(document).on('click', '#problem-button', function(){ $.ajax({\n headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, url: \"/problem\",\n type: \"POST\",\n   data: createJsonObjectWithProblemArray(\"#problem\"),\n    success: function( result ) {\n  $( \"#problem-spec\" ).html(result.premises+\" | \"+result.conclusion);\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#expansions-button', function(){ alert(createJsonObject(\"#expansions\")); $.ajax({\n   headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, type: \"POST\",\n url: \"/expansions\",\n    data: createJsonObject(\"#expansions\"),\n dataType: \"json\",\n success: function( result ) {\n  $( \"#expansions-spec\" ).html(result.expansionFrom+\" | \"+result.expansionTo);\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert('error: ' + str);\n    }})}); \n \n $(document).on('click', '#rewrites-button', function(){ $.ajax({\n headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, url: \"/rewrites\",\n type: \"POST\",\n   data: createJsonObject(\"#rewrites\"),\n dataType: \"json\",\n    success: function( result ) {\n  console.log(result); $( \"#rewrites-spec\" ).html(result.rewriteFrom+\" | \"+result.rewriteTo);\n},\n    error: function( result ) {\n  str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#library-button', function(){ $.ajax({\n  headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, type: \"POST\",\n url: \"/library\",\n    data: createJsonObjectWithArray(\"#library\"),\n dataType: \"json\",\n   success: function( result ) {\n console.log(result); $( \"#library-spec\" ).html(result.premises+\" | \"+result.conclusion);\n},\n    error: function( result ) {\n   str = JSON.stringify(result);\n    alert(str);\n    }})});\n function createJsonObject(formName){\n var arr = $(formName).serializeArray();\n var json = {};\n jQuery.each(arr, function() {\n json[this.name] = this.value || '';\n });\n var json_string = JSON.stringify(json);\n json_string.replace(/(\\s*?{\\s*?|\\s*?,\\s*?)(['\"])?([a-zA-Z0-9]+)(['\"])?:/g, '$1\"$3\":');\n return json_string;\n } \n function createJsonObjectWithArray(formName){\n var arr = $(formName).serializeArray();\n var json = {};\n jQuery.each(arr, function() {\n json[this.name] = this.value || '';\n });\n var json_string = JSON.stringify(json);\n json_string.replace(/(\\s*?{\\s*?|\\s*?,\\s*?)(['\"])?([a-zA-Z0-9]+)(['\"])?:/g, '$1\"$3\":');\n eval('var jsonO = new Object(' + json_string + ')'); jsonO.libraryPremises = jsonO.libraryPremises.split(\"@\"); \n var json_edit_string = JSON.stringify(jsonO);\n return json_edit_string;\n }\n function createJsonObjectWithProblemArray(formName){\n var arr = $(formName).serializeArray();\n var json = {};\n jQuery.each(arr, function() {\n json[this.name] = this.value || '';\n });\n var json_string = JSON.stringify(json);\n json_string.replace(/(\\s*?{\\s*?|\\s*?,\\s*?)(['\"])?([a-zA-Z0-9]+)(['\"])?:/g, '$1\"$3\":');\n eval('var jsonO2 = new Object(' + json_string + ')'); console.log(jsonO2); jsonO2.problemPremises = jsonO2.problemPremises.split(\"@\"); \n var json_edit_string = JSON.stringify(jsonO2);\n return json_edit_string;\n }"
+              H.script "$(\":header\").click(function(event){\n     //alert($(event.currentTarget).siblings(\"form\").innerHTML);\n     //$(event.currentTarget).siblings(\"form\").toggleClass(\"hidden\");\n     $( \".bordered-rightcol form\" ).toggleClass(\"hidden\");\n   });\n\n $(document).on('click', '#problem-button', function(){ $.ajax({\n headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, url: \"/problem\",\n type: \"POST\",\n   data: createJsonObjectWithProblemArray(\"#problem\"),\n    success: function( result ) {\n  alert(result); $( \"#problem-spec\" ).text(\"<p>\" + result.description+\"</p>\");\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#expansions-button', function(){ alert(createJsonObject(\"#expansions\")); $.ajax({\n   headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, type: \"POST\",\n url: \"/expansions\",\n    data: createJsonObject(\"#expansions\"),\n dataType: \"json\",\n success: function( result ) {\n  $( \"#expansions-spec\" ).html(result.expansionFrom+\" | \"+result.expansionTo);\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert('error: ' + str);\n    }})}); \n \n $(document).on('click', '#rewrites-button', function(){ $.ajax({\n headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, url: \"/rewrites\",\n type: \"POST\",\n   data: createJsonObject(\"#rewrites\"),\n dataType: \"json\",\n    success: function( result ) {\n  console.log(result); $( \"#rewrites-spec\" ).html(result.rewriteFrom+\" | \"+result.rewriteTo);\n},\n    error: function( result ) {\n  str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#library-button', function(){ $.ajax({\n  headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, type: \"POST\",\n url: \"/library\",\n    data: createJsonObjectWithArray(\"#library\"),\n dataType: \"json\",\n   success: function( result ) {\n console.log(result); $( \"#library-spec\" ).html(result.premises+\" | \"+result.conclusion);\n},\n    error: function( result ) {\n   str = JSON.stringify(result);\n    alert(str);\n    }})});\n function createJsonObject(formName){\n var arr = $(formName).serializeArray();\n var json = {};\n jQuery.each(arr, function() {\n json[this.name] = this.value || '';\n });\n var json_string = JSON.stringify(json);\n json_string.replace(/(\\s*?{\\s*?|\\s*?,\\s*?)(['\"])?([a-zA-Z0-9]+)(['\"])?:/g, '$1\"$3\":');\n return json_string;\n } \n function createJsonObjectWithArray(formName){\n var arr = $(formName).serializeArray();\n var json = {};\n jQuery.each(arr, function() {\n json[this.name] = this.value || '';\n });\n var json_string = JSON.stringify(json);\n json_string.replace(/(\\s*?{\\s*?|\\s*?,\\s*?)(['\"])?([a-zA-Z0-9]+)(['\"])?:/g, '$1\"$3\":');\n eval('var jsonO = new Object(' + json_string + ')'); jsonO.libraryPremises = jsonO.libraryPremises.split(\"@\"); \n var json_edit_string = JSON.stringify(jsonO);\n return json_edit_string;\n }\n function createJsonObjectWithProblemArray(formName){\n var arr = $(formName).serializeArray();\n var json = {};\n jQuery.each(arr, function() {\n json[this.name] = this.value || '';\n });\n var json_string = JSON.stringify(json);\n json_string.replace(/(\\s*?{\\s*?|\\s*?,\\s*?)(['\"])?([a-zA-Z0-9]+)(['\"])?:/g, '$1\"$3\":');\n eval('var jsonO2 = new Object(' + json_string + ')'); console.log(jsonO2); jsonO2.problemPremises = jsonO2.problemPremises.split(\"@\"); \n var json_edit_string = JSON.stringify(jsonO2);\n return json_edit_string;\n }"
 
 
+-}
 

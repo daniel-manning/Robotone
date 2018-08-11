@@ -1,0 +1,8 @@
+.minwidth { min-width:100px; width: auto !important; width: 100px; }
+.hidden { visibility: hidden; display:none; }
+#workspace { float:left; width:69%; }
+#equational-helpers {float: right; width:29%;}
+.bordered { border-style: solid ridge; border-width:thin;}
+.bordered-rightcol { border-style: solid ridge; border-width:thin; margin-top:10px;}
+.section-title { text-align:center; }
+div.section-title div.title {background-color: #B360C3;}

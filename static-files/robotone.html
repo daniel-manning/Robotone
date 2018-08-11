@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Proof Workspace</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="style.css" rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML-full"></script>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config({
+                extensions: ["tex2jax.js"],
+                jax: ["input/TeX","output/HTML-CSS"],
+                tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]}
+            });
+        </script>
+    </head>
+    <body>
+        <div id="tabletop" class="minwidth">
+            <div id="workspace" class="bordered">
+                <form id="problem"><label for="problemDescription">Description:</label><input id="problemDescription" name="problemDescription" type="text"><label for="problemPremises">Premises:</label><input id="problemPremises" name="problemPremises" type="text"><label for="problemConclusion">Conclusion:</label><input id="problemConclusion" name="problemConclusion" type="text"><input id="problem-button" type="button"></form>
+                <h2>Problem</h2>
+                <div id="problem-spec"></div>
+                <div id="problem-expansion"></div>
+            </div>
+            <div id="equational-helpers" class="section-title">
+                <div id="expansions-container" class="bordered-rightcol">
+                    <div class="title">
+                        <h2>Expansions</h2>
+                    </div>
+                    <form id="expansions" class="hidden"><label for="expansionFrom">From:</label><input id="expansionFrom" name="expansionFrom" type="text"><label for="expansionTo">To:</label><input id="expansionTo" name="expansionTo" type="text"><input id="expansions-button" type="button"></form>
+                    <div id="expansions-spec"></div>
+                </div>
+                <div id="rewrites-container" class="bordered-rightcol">
+                    <div class="title"><h2>Rewrites</h2></div>
+                    <form id="rewrites" class="hidden"><label for="rewriteFrom">From:</label><input id="rewriteFrom" name="rewriteFrom" type="text"><label for="rewriteTo">To:</label><input id="rewriteTo" name="rewriteTo" type="text"><input id="rewrites-button" type="button"></form>
+                    <div id="rewrites-spec"></div>
+                </div>
+                <div id="library-container" class="bordered-rightcol">
+                    <div class="title"><h2>Library</h2></div>
+                    <form id="library" class="hidden"><label for="libraryDescription">Description:</label><input id="libraryDescription" name="libraryDescription" type="text"><label for="libraryPremises">Premises:</label><input id="libraryPremises" name="libraryPremises" type="text"><label for="libraryConclusion">Conclusion:</label><input id="libraryConclusion" name="libraryConclusion" type="text"><input id="library-button" type="button"></form>
+                    <div id="library-spec"></div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="script.js"></script>
+    </body>
+</html>
