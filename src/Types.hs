@@ -65,6 +65,18 @@ instance FromJSON ProblemRecord
 instance ToJSON ProblemRecord where
     toJSON (ProblemRecord description premises conclusion) = object ["description" .= description, "premises" .= premises, "conclusion" .= conclusion]
 
+data SolutionRecord =
+  SolutionRecord{
+    writeupOfMoves::String,
+    tableauxSteps::[String]
+  }
+  deriving (Eq, Show, Read, Generic)
+
+instance FromJSON SolutionRecord
+instance ToJSON SolutionRecord where
+    toJSON (SolutionRecord writeupOfMoves tableauxSteps) = object ["writeupOfMoves" .= writeupOfMoves, "tableauxSteps" .= tableauxSteps]
+
+
 ----------------------------------------------------------------------------------------------------
 
 newtype Function = Function String                                             deriving (Eq, Ord, Show)
@@ -119,7 +131,11 @@ type IsUnlocked = Bool
 data TableauName = TableauName IsUnlocked ID                                deriving (Eq, Ord, Show)
 
 data Tableau = Tableau TableauName [Variable] [Statement] Target
-             | Done TableauName                                             deriving (Eq, Ord, Show)
+             | Done TableauName                                             deriving (Eq, Ord, Show, Generic)
+
+--instance FromJSON Tableau
+instance ToJSON Tableau where
+   toJSON (tableau) = object ["lump" .= pretty(tableau)]
 
 data Target = Target [Either Statement [Tableau]] --tableaux are disjunctive
             | Contradiction                                                 deriving (Eq, Ord, Show)
@@ -156,6 +172,8 @@ instance Pretty Variable where
     pretty (Variable s id _ vtype d) =
         prettyVariableNameID s id ++ pretty vtype ++ pretty d
 
+instance Pretty VariableChoice where
+    pretty (VariableChoice v t) = "VariableChoice " ++ pretty v ++ pretty t
 
 instance Pretty Term where
     pretty (ApplyFn (Function "intersect") [a,b]) = pretty a ++ " cap " ++ pretty b

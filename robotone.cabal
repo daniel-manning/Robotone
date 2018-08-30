@@ -29,7 +29,7 @@ executable robotone-exe
   hs-source-dirs:     app, src
   main-is:            Main.hs
   build-depends:      base, robotone, containers, mtl, transformers, logict, warp, aeson, wai-make-assets,
-   servant, wai, servant-server, text, time, servant-blaze, blaze-html, HDBC, HDBC-sqlite3, json, aeson, either, regex-compat
+   servant, wai, servant-server, text, time, servant-blaze, blaze-html, HDBC, HDBC-sqlite3, json, aeson, either, regex-compat, parsec
 
   default-language:   Haskell2010
 

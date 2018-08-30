@@ -13,7 +13,8 @@ $(document).on('click', '#problem-button', function(){ $.ajax({
      type: "POST",
      data: createJsonObjectWithProblemArray("#problem"),
      success: function( result ) {
-      $( "#problem-spec" ).html("<p>" + result.description+"</p>");
+      $( "#problem-workspace-start" ).toggleClass("hidden");
+      $( "#problem-spec" ).html("<p id=\"desc\">" + result.description+"</p>");
       MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
      },
      error: function( result ) {
@@ -71,6 +72,26 @@ $(document).on('click', '#problem-button', function(){ $.ajax({
     error: function( result ) {
         str = JSON.stringify(result);
         alert(str);
+    }
+    })});
+
+  $(document).on('click', '#workspace-button', function(){ $.ajax({
+    headers: {
+     'Accept': 'application/json',
+     'Content-Type': 'application/json'
+    },
+    type: "GET",
+    url: "/createInitialTableau",
+    data: "{}",
+    dataType: "json",
+    success: function( result ) {
+       console.log(result); $( "#problem-expansion" ).html("<h1>Proof</h1><p id=\"step-desc\">" + result.writeupOfMoves + "</p><h2>Steps</h2><div id=\"step-breakdown\"><p>" + result.tableauxSteps.join("</p><p>") + "</p></div>");
+       MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+    },
+    error: function( result ) {
+       alert(result)
+       str = JSON.stringify(result);
+       alert(str);
     }
     })});
 

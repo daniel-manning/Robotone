@@ -29,6 +29,20 @@ import GHC.Generics
 import Types
 import Data.Maybe
 
+import RobotM
+import Parser
+import TestData
+import Move
+
+--
+import DeletionMoves
+import TidyingMoves
+import ApplyingMoves
+import Suspension
+import Html.Tex
+import Html.TexBase
+import Html.Writeup
+import WriteupBase
 
 type Homepage = H.Html
 
@@ -43,6 +57,9 @@ type Api =
   "library" :> ReqBody '[JSON] LibraryRecord :> Post '[JSON] LibraryRecord :<|>
   "problem" :> Get '[JSON] [ProblemRecord] :<|>
   "problem" :> ReqBody '[JSON] ProblemRecord :> Post '[JSON] ProblemRecord :<|>
+{-  "solutionStep" :> Get '[JSON] [ProblemStep] :<|>
+  "solutionStep" :> ReqBody '[JSON] ProblemStep :> Post '[JSON] ProblemStep :<|>-}
+  "createInitialTableau" :> Get '[JSON] SolutionRecord :<|> -- :> ReqBody '[JSON] ProblemSetup :>
   Raw
 
 
@@ -74,6 +91,9 @@ server dbh =
   postLibrary :<|>
   getProblem :<|>
   postProblem :<|>
+  {-getSolutionStep :<|>
+  postSolutionStep :<|>-}
+  createInitialTableau :<|>
   staticServer
   where
     getExpansions :: Handler [ExpansionRecord]
@@ -100,70 +120,104 @@ server dbh =
     postProblem :: ProblemRecord -> Handler ProblemRecord
     postProblem problem = liftIO $ addProblem dbh problem
 
+    {-getSolutionStep :: Handler [ProblemStep]
+    getSolutionStep = liftIO $ getProblemRecords dbh
+
+    postSolutionStep :: ProblemStep -> Handler ProblemStep
+    postSolutionStep problem = liftIO $ addProblem dbh problem-}
+
+    createInitialTableau :: Handler SolutionRecord
+    createInitialTableau = return(printSolution 100 (Problem "If $f$ is a continuous function and $(a_n) \to a$, then $(f(a_n)) \to f(a)$" ["continuous(f)","tendsto(an,a)"] "tendsto(applyfnpointwise(f,an),applyfn(f,a))"))
+
     staticServer :: ServerT Raw m
     staticServer = serveDirectoryWebApp "static-files"
 
---REST METHODS
-{-
-getHomePage :: Handler Homepage
-getHomePage = return home
 
-home :: Homepage
-home = H.docTypeHtml $ do
-          H.head $ do
-              H.title "Proof Workspace"
-              H.meta H.! httpEquiv "Content-Type" H.! content "text/html; charset=UTF-8"
-              H.meta H.! httpEquiv "X-UA-Compatible" H.! content "IE=edge"
-              H.meta H.! name "viewport" H.! content "width=device-width, initial-scale=1"
-              H.style H.! type_ "text/css" $ ".minwidth { min-width:100px; width: auto !important; width: 100px; }\n   .hidden { visibility: hidden; display:none; }\n   #workspace { float:left; width:69%; }\n   #equational-helpers {float: right; width:29%;}\n   .bordered { border-style: solid ridge; border-width:thin;}  \n   .bordered-rightcol { border-style: solid ridge; border-width:thin; margin-top:10px;}\n   .section-title { text-align:center; }\n   div.section-title div.title {background-color: #B360C3;}"
-              H.script H.! src "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML-full" $ mempty
-              H.script H.! type_ "text/javascript" H.! src "https://code.jquery.com/jquery-3.3.1.min.js" $ "<script type=\"text/x-mathjax-config\">\n  MathJax.Hub.Config({\n    extensions: [\"tex2jax.js\"],\n    jax: [\"input/TeX\",\"output/HTML-CSS\"],\n    tex2jax: {inlineMath: [[\"$\",\"$\"],[\"\\\\(\",\"\\\\)\"]]}\n  });"
-          H.body $ do
-              H.div H.! A.id "tabletop" H.! class_ "minwidth" $ do
-                  H.div H.! A.id "workspace" H.! class_ "bordered" $ do
-                      H.form H.! A.id "problem" $ do
-                          H.label H.! for "problemDescription" $ "Description:"
-                          H.input H.! A.id "problemDescription" H.! name "problemDescription" H.! type_ "text"
-                          H.label H.! for "problemPremises" $ "Premises:"
-                          H.input H.! A.id "problemPremises" H.! name "problemPremises" H.! type_ "text"
-                          H.label H.! for "problemConclusion" $ "Conclusion:"
-                          H.input H.! A.id "problemConclusion" H.! name "problemConclusion" H.! type_ "text"
-                          H.input H.! A.id "problem-button" H.! type_ "button"
-                      H.h2 "Problem"
-                      H.div H.! A.id "problem-spec" $ mempty
-                      H.div H.! A.id "problem-expansion" $ mempty
-                  H.div H.! A.id "equational-helpers" H.! class_ "section-title" $ do
-                      H.div H.! A.id "expansions-container" H.! class_ "bordered-rightcol" $ do
-                          H.div H.! class_ "title" $ H.h2 "Expansions"
-                          H.form H.! A.id "expansions" H.! class_ "hidden" $ do
-                              H.label H.! for "expansionFrom" $ "From:"
-                              H.input H.! A.id "expansionFrom" H.! name "expansionFrom" H.! type_ "text"
-                              H.label H.! for "expansionTo" $ "To:"
-                              H.input H.! A.id "expansionTo" H.! name "expansionTo" H.! type_ "text"
-                              H.input H.! A.id "expansions-button" H.! type_ "button"
-                          H.div H.! A.id "expansions-spec" $ mempty
-                      H.div H.! A.id "rewrites-container" H.! class_ "bordered-rightcol" $ do
-                          H.div H.! class_ "title" $ H.h2 "Rewrites"
-                          H.form H.! A.id "rewrites" H.! class_ "hidden" $ do
-                              H.label H.! for "rewriteFrom" $ "From:"
-                              H.input H.! A.id "rewriteFrom" H.! name "rewriteFrom" H.! type_ "text"
-                              H.label H.! for "rewriteTo" $ "To:"
-                              H.input H.! A.id "rewriteTo" H.! name "rewriteTo" H.! type_ "text"
-                              H.input H.! A.id "rewrites-button" H.! type_ "button"
-                          H.div H.! A.id "rewrites-spec" $ mempty
-                      H.div H.! A.id "library-container" H.! class_ "bordered-rightcol" $ do
-                          H.div H.! class_ "title" $ H.h2 "Library"
-                          H.form H.! A.id "library" H.! class_ "hidden" $ do
-                              H.label H.! for "libraryDescription" $ "Description:"
-                              H.input H.! A.id "libraryDescription" H.! name "libraryDescription" H.! type_ "text"
-                              H.label H.! for "libraryPremises" $ "Premises:"
-                              H.input H.! A.id "libraryPremises" H.! name "libraryPremises" H.! type_ "text"
-                              H.label H.! for "libraryConclusion" $ "Conclusion:"
-                              H.input H.! A.id "libraryConclusion" H.! name "libraryConclusion" H.! type_ "text"
-                              H.input H.! A.id "library-button" H.! type_ "button"
-                          H.div H.! A.id "library-spec" $ mempty
-              H.script "$(\":header\").click(function(event){\n     //alert($(event.currentTarget).siblings(\"form\").innerHTML);\n     //$(event.currentTarget).siblings(\"form\").toggleClass(\"hidden\");\n     $( \".bordered-rightcol form\" ).toggleClass(\"hidden\");\n   });\n\n $(document).on('click', '#problem-button', function(){ $.ajax({\n headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, url: \"/problem\",\n type: \"POST\",\n   data: createJsonObjectWithProblemArray(\"#problem\"),\n    success: function( result ) {\n  alert(result); $( \"#problem-spec\" ).text(\"<p>\" + result.description+\"</p>\");\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#expansions-button', function(){ alert(createJsonObject(\"#expansions\")); $.ajax({\n   headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, type: \"POST\",\n url: \"/expansions\",\n    data: createJsonObject(\"#expansions\"),\n dataType: \"json\",\n success: function( result ) {\n  $( \"#expansions-spec\" ).html(result.expansionFrom+\" | \"+result.expansionTo);\n},\n    error: function( result ) {\n    str = JSON.stringify(result);\n    alert('error: ' + str);\n    }})}); \n \n $(document).on('click', '#rewrites-button', function(){ $.ajax({\n headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, url: \"/rewrites\",\n type: \"POST\",\n   data: createJsonObject(\"#rewrites\"),\n dataType: \"json\",\n    success: function( result ) {\n  console.log(result); $( \"#rewrites-spec\" ).html(result.rewriteFrom+\" | \"+result.rewriteTo);\n},\n    error: function( result ) {\n  str = JSON.stringify(result);\n    alert(str);\n    }})}); \n \n $(document).on('click', '#library-button', function(){ $.ajax({\n  headers: {\n 'Accept': 'application/json',\n 'Content-Type': 'application/json'\n}, type: \"POST\",\n url: \"/library\",\n    data: createJsonObjectWithArray(\"#library\"),\n dataType: \"json\",\n   success: function( result ) {\n console.log(result); $( \"#library-spec\" ).html(result.premises+\" | \"+result.conclusion);\n},\n    error: function( result ) {\n   str = JSON.stringify(result);\n    alert(str);\n    }})});\n function createJsonObject(formName){\n var arr = $(formName).serializeArray();\n var json = {};\n jQuery.each(arr, function() {\n json[this.name] = this.value || '';\n });\n var json_string = JSON.stringify(json);\n json_string.replace(/(\\s*?{\\s*?|\\s*?,\\s*?)(['\"])?([a-zA-Z0-9]+)(['\"])?:/g, '$1\"$3\":');\n return json_string;\n } \n function createJsonObjectWithArray(formName){\n var arr = $(formName).serializeArray();\n var json = {};\n jQuery.each(arr, function() {\n json[this.name] = this.value || '';\n });\n var json_string = JSON.stringify(json);\n json_string.replace(/(\\s*?{\\s*?|\\s*?,\\s*?)(['\"])?([a-zA-Z0-9]+)(['\"])?:/g, '$1\"$3\":');\n eval('var jsonO = new Object(' + json_string + ')'); jsonO.libraryPremises = jsonO.libraryPremises.split(\"@\"); \n var json_edit_string = JSON.stringify(jsonO);\n return json_edit_string;\n }\n function createJsonObjectWithProblemArray(formName){\n var arr = $(formName).serializeArray();\n var json = {};\n jQuery.each(arr, function() {\n json[this.name] = this.value || '';\n });\n var json_string = JSON.stringify(json);\n json_string.replace(/(\\s*?{\\s*?|\\s*?,\\s*?)(['\"])?([a-zA-Z0-9]+)(['\"])?:/g, '$1\"$3\":');\n eval('var jsonO2 = new Object(' + json_string + ')'); console.log(jsonO2); jsonO2.problemPremises = jsonO2.problemPremises.split(\"@\"); \n var json_edit_string = JSON.stringify(jsonO2);\n return json_edit_string;\n }"
+    --REMOVE WHEN DONE
+    pd = TestData.printingData
+    lib = TestData.library
+
+    movesFrom :: RobotState -> Tableau -> [(MoveDescription, Tableau)]
+    movesFrom s t = case mapMaybe (runRobotM pd lib s) (allMovesByPriority t) of
+                [] -> []
+                (move@(MoveDescription _ _ _, t'), s'):_ -> move:movesFrom s' t'
+
+    moveTypesByPriority :: [MoveType]
+    moveTypesByPriority = [
+       --Deletion
+         deleteDone,
+         deleteDoneDisjunct,
+     --    deleteRedundantHypothesis, --move 1
+         deleteDangling, --move 2
+         deleteUnmatchable, -- move 3
+       --Tidying (4-9)
+         peelAndSplitUniversalConditionalTarget, --move 4
+     --    flipNegativeTarget, --move 5
+     --    flipNegativeHypothesis, --move 6
+         splitDisjunctiveHypothesis, --move 7
+     --    splitConjunctiveTarget, --move 8
+         splitDisjunctiveTarget,
+         peelBareUniversalTarget, -- move 9
+         removeTarget, --move 10
+         collapseSubtableauTarget,
+       --Applying
+         forwardsReasoning, --move 11
+         forwardsLibraryReasoning, --move 11
+         expandPreExistentialHypothesis, --move 13
+         elementaryExpansionOfHypothesis, --move 12
+         backwardsReasoning, --move 14
+         backwardsLibraryReasoning, --move 14
+         elementaryExpansionOfTarget, --move 15
+         expandPreUniversalTarget, --move 16
+         solveBullets,
+         automaticRewrite,
+       --Suspension
+         unlockExistentialUniversalConditionalTarget, --move 17
+         unlockExistentialTarget,
+         expandPreExistentialTarget,
+         convertDiamondToBullet,
+         rewriteVariableVariableEquality,
+         rewriteVariableTermEquality
+       ]
+
+    allMovesByPriority :: Tableau -> [RobotM (MoveDescription, Tableau)]
+    allMovesByPriority  t = [f t | (MoveType f) <- moveTypesByPriority]
+
+    printMove :: Int -> Tableau -> MoveDescription -> String
+    printMove n oldTableau (MoveDescription statementsUsed clauses text) =
+       unlines [fit $ texTableauBolding pd statementsUsed oldTableau,
+        show n ++ ". " ++ text,
+        unwords (asSentence . writeup pd <$> clauses)]
+
+    printSolution :: Int -> Problem -> SolutionRecord
+    printSolution max p =
+      let
+          hs = ["continuous(f)", "tendsto(an,a)"]
+          t = "tendsto(applyfnpointwise(f,an),applyfn(f,a))"
+          pd = TestData.printingData
+          lib = TestData.library
+          initialTableauM = createTableau False (parse formula <$> hs) $ parse formula t
+          Just(initialTableau, s) = runRobotM pd lib initialRobotState initialTableauM
+          moves = movesFrom s initialTableau
+          (moveDescriptions, outputTableaux) = unzip moves
+          proof = compress . eliminate . fuse $ concat [cs | MoveDescription _ cs _ <- moveDescriptions]
+
+      in  if null moves
+            then SolutionRecord { writeupOfMoves = "", tableauxSteps = [(fit $ tex pd initialTableau), "No moves possible."]}
+            else let {
+                    writeupOfMoves = if (not $ lengthAtLeast (max+1) moves) then (unwords $ asSentence . writeup pd <$> proof) else "";
+                    steps = "\\begin{steps}";
+                    tableauxSteps = zipWith3 printMove [1..max] (initialTableau:outputTableaux) moveDescriptions;
+                    output = unlines [fit . tex pd . last . take max $ outputTableaux, ""];
+                    nextS = if (lengthAtLeast (max+1) moves) then show max ++ " moves made; stopping as the Robot may be in an infinite loop." else case last moves of {(_, Done _) -> "\t" ++ show (length moves) ++ " moves made; problem solved. Problem solved.";  _ -> "\t" ++ show (length moves) ++ " moves made. No moves possible."};
+                    double = "\\cleardoublepage\n";
+                    endSteps = "\\end{steps}"
+                } in (SolutionRecord { writeupOfMoves = writeupOfMoves, tableauxSteps = tableauxSteps })
 
 
--}
+lengthAtLeast :: Int -> [a] -> Bool
+lengthAtLeast 0 _      = True
+lengthAtLeast _ []     = False
+lengthAtLeast n (_:xs) = lengthAtLeast (n-1) xs
 
+     -------------------------

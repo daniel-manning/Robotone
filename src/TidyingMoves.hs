@@ -30,6 +30,7 @@ import TexBase
 import Tex
 import RobotM
 import Expansion
+import WriteupBase
 import Writeup
 
 ----------------------------------------------------------------------------------------------------

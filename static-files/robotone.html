@@ -11,7 +11,7 @@
         <script type="text/x-mathjax-config">
             MathJax.Hub.Config({
                 extensions: ["tex2jax.js"],
-                jax: ["input/TeX","output/HTML-CSS"],
+                jax: ["input/TeX","output/CommonHTML"],
                 tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]}
             });
         </script>
@@ -19,9 +19,10 @@
     <body>
         <div id="tabletop" class="minwidth">
             <div id="workspace" class="bordered">
-                <form id="problem"><label for="problemDescription">Description:</label><input id="problemDescription" name="problemDescription" type="text"><label for="problemPremises">Premises:</label><input id="problemPremises" name="problemPremises" type="text"><label for="problemConclusion">Conclusion:</label><input id="problemConclusion" name="problemConclusion" type="text"><input id="problem-button" type="button"></form>
+                <form id="problem"><label for="problemDescription">Description:</label><input id="problemDescription" name="problemDescription" type="text"><label for="problemPremises">Premises:</label><input id="problemPremises" name="problemPremises" type="text"><label for="problemConclusion">Conclusion:</label><input id="problemConclusion" name="problemConclusion" type="text"><button id="problem-button" form="problem" type="button">Submit Problem</button></form>
                 <h2>Problem</h2>
                 <div id="problem-spec"></div>
+                <form id="problem-workspace-start" class="hidden"><button id="workspace-button" form="problem-workspace-start" type="button">Solve Problem</button></form>
                 <div id="problem-expansion"></div>
             </div>
             <div id="equational-helpers" class="section-title">
@@ -29,17 +30,17 @@
                     <div class="title">
                         <h2>Expansions</h2>
                     </div>
-                    <form id="expansions" class="hidden"><label for="expansionFrom">From:</label><input id="expansionFrom" name="expansionFrom" type="text"><label for="expansionTo">To:</label><input id="expansionTo" name="expansionTo" type="text"><input id="expansions-button" type="button"></form>
+                    <form id="expansions" class="hidden"><label for="expansionFrom">From:</label><input id="expansionFrom" name="expansionFrom" type="text"><label for="expansionTo">To:</label><input id="expansionTo" name="expansionTo" type="text"><button id="expansions-button" form="expansions" type="button">Submit Expansion</button></form>
                     <div id="expansions-spec"></div>
                 </div>
                 <div id="rewrites-container" class="bordered-rightcol">
                     <div class="title"><h2>Rewrites</h2></div>
-                    <form id="rewrites" class="hidden"><label for="rewriteFrom">From:</label><input id="rewriteFrom" name="rewriteFrom" type="text"><label for="rewriteTo">To:</label><input id="rewriteTo" name="rewriteTo" type="text"><input id="rewrites-button" type="button"></form>
+                    <form id="rewrites" class="hidden"><label for="rewriteFrom">From:</label><input id="rewriteFrom" name="rewriteFrom" type="text"><label for="rewriteTo">To:</label><input id="rewriteTo" name="rewriteTo" type="text"><button id="rewrites-button" form="rewrites" type="button">Submit Rewrite</button></form>
                     <div id="rewrites-spec"></div>
                 </div>
                 <div id="library-container" class="bordered-rightcol">
                     <div class="title"><h2>Library</h2></div>
-                    <form id="library" class="hidden"><label for="libraryDescription">Description:</label><input id="libraryDescription" name="libraryDescription" type="text"><label for="libraryPremises">Premises:</label><input id="libraryPremises" name="libraryPremises" type="text"><label for="libraryConclusion">Conclusion:</label><input id="libraryConclusion" name="libraryConclusion" type="text"><input id="library-button" type="button"></form>
+                    <form id="library" class="hidden"><label for="libraryDescription">Description:</label><input id="libraryDescription" name="libraryDescription" type="text"><label for="libraryPremises">Premises:</label><input id="libraryPremises" name="libraryPremises" type="text"><label for="libraryConclusion">Conclusion:</label><input id="libraryConclusion" name="libraryConclusion" type="text"><button id="library-button" form="library" type="button">Submit Library</button></form>
                     <div id="library-spec"></div>
                 </div>
             </div>
