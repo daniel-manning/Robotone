@@ -22,7 +22,7 @@ import Data.Map (Map, (!))
 import qualified Data.Map as Map
 
 import Printing
-import TexBase
+import Html.TexBase
 import Types
 
 ----------------------------------------------------------------------------------------------------
@@ -138,17 +138,23 @@ instance Tex Tag where
 
 instance Tex Statement where
     tex pd s@(Statement n f ts)
-        | Deleted `elem` ts = grey (texStatementCore pd s) {--TEMP-} ++ "&" ++ texTagsGrey pd ts
-        | otherwise = texStatementCore pd s {--TEMP-} ++ "&" ++ texTags pd ts
+        | Deleted `elem` ts = grey (texStatementCore pd s) {--TEMP-} ++ texTagsGrey pd ts
+        | otherwise = texStatementCore pd s {--TEMP-} ++ texTags pd ts
 
 
 texStatementBold :: PrintingData -> Statement -> String
 texStatementBold pd s@(Statement n f ts)
-        | Deleted `elem` ts = grey (textbf . boldmath $ texStatementCore pd s) {--TEMP-} ++ "&" ++ (textbf . boldmath $ texTagsGrey pd ts)
-        | otherwise = (textbf . boldmath $ texStatementCore pd s) {--TEMP-} ++ "&" ++ (textbf . boldmath $ texTags pd ts)
+        | Deleted `elem` ts = grey (textbf . boldmath $ texStatementCore pd s) {--TEMP-} ++ (textbf . boldmath $ texTagsGrey pd ts)
+        | otherwise = (textbf . boldmath $ texStatementCore pd s) {--TEMP-} ++ (textbf . boldmath $ texTags pd ts)
 
 texStatementCore :: PrintingData -> Statement -> String
-texStatementCore pd (Statement n f ts) = texSN n ++ ".\\ " ++ math (tex pd f)
+texStatementCore pd (Statement n f ts) = texSN n ++ " " ++ output
+      where
+          statement = (tex pd f)
+          output = if( '$' `elem` statement) then math $ deleteAllInstances '$' statement else math statement
+
+deleteAllInstances :: Eq a => a -> [a] -> [a]
+deleteAllInstances a xs = filter (/= a) xs
 
 texTags :: PrintingData -> [Tag] -> String
 texTags pd [] = ""
@@ -169,14 +175,13 @@ instance Tex Tableau where
 
 texTableauBolding :: PrintingData -> [StatementName] -> Tableau -> String
 texTableauBolding pd ns (Tableau (TableauName hasDagger id) vs ss t) = unlines
-    [
-{--TEMP-}     intercalate "\\hspace{1.5mm}" (math . tex pd <$> vs) ++ "\\\\\n",
-     intercalate "\\\\\n"
-         [if n `elem` ns then texStatementBold pd s else tex pd s | s@(Statement n _ _) <- ss],
-     "\\Bstrut\\\\\\hline\\Tstrut",
-     texTargetBolding pd ns t,
-     show id  ++ (guard hasDagger >> "$^\\blacklozenge$")
+    ["<div><ul>",
+{--TEMP-}  "<li>" ++ (intercalate ", " (math . tex pd <$> vs)) ++ "</li>",
+     "<li>" ++ (intercalate "</li><li>" [if n `elem` ns then texStatementBold pd s else tex pd s | s@(Statement n _ _) <- ss]) ++ "</li>",
+     "<li>" ++ (texTargetBolding pd ns t) ++ "</li>",
+     "<li>" ++ (show id  ++ (guard hasDagger >> "$^\\blacklozenge$")) ++ "</li>",
 --     "\\node[tableaulabel] at (main.north west) [xshift=4mm, yshift=-5.5mm] {L" ++ show id  ++ {-TEMP (guard hasDagger >> "$^\\blacklozenge$") ++ -}"};",
+      "</ul></div>"
      ]
 texTableauBolding _  _ (Done (TableauName hasDagger id)) =  unlines
     [show id ++ (guard hasDagger >> "$^\\blacklozenge$")

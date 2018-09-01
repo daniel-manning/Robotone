@@ -6,3 +6,7 @@
 .bordered-rightcol { border-style: solid ridge; border-width:thin; margin-top:10px;}
 .section-title { text-align:center; }
 div.section-title div.title {background-color: #B360C3;}
+div.tableau > div { background-color: lightgrey; width:50%;}
+div.tableau div ul {list-style-type: none; }
+ul { border: 1px solid black;}
+span.grey { color:grey;}

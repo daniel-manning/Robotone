@@ -16,6 +16,7 @@ import Debug.Trace
 
 import Printing
 import Types
+
 import WriteupBase
 import Html.TexBase
 import Html.Tex
@@ -93,7 +94,7 @@ instance Writeup Formula where
     writeup pd (Or fs) = orList $ writeup pd <$> fs
     writeup pd (Forall vs f) = math $ "\\forall " ++ commaList (writeup pd <$> vs) ++ ".(" ++ textrm (writeup pd f) ++ ")"
     writeup pd (UniversalImplies _ [f@(AtomicFormula _ _)] f'@(AtomicFormula _ _)) =
-        writeup pd f' ++ textrm " whenever " ++ writeup pd f
+        writeup pd f' ++ " whenever " ++ writeup pd f
     writeup pd (UniversalImplies _ [f] f') = "if " ++ writeup pd f ++ ", then " ++ writeup pd f'
     writeup pd (UniversalImplies vs fs f') = math $ "\\forall " ++ intercalate ", " (writeup pd <$> vs) ++
                                                ".(" ++ textrm (writeup pd (And fs)) ++ "\\Rightarrow " ++ textrm (writeup pd f') ++ ")"

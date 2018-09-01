@@ -185,9 +185,9 @@ server dbh =
 
     printMove :: Int -> Tableau -> MoveDescription -> String
     printMove n oldTableau (MoveDescription statementsUsed clauses text) =
-       unlines [fit $ texTableauBolding pd statementsUsed oldTableau,
-        show n ++ ". " ++ text,
-        unwords (asSentence . writeup pd <$> clauses)]
+       unlines ["<div class=\"tableau\">" ++ (fit $ texTableauBolding pd statementsUsed oldTableau) ++ "</div>",
+        "<div class=\"something-else\">" ++ show n ++ ". " ++ text ++ "</div>",
+        "<div class=\"writeup-step\">" ++ (unwords (asSentence . writeup pd <$> clauses)) ++ "</div>"]
 
     printSolution :: Int -> Problem -> SolutionRecord
     printSolution max p =

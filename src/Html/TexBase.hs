@@ -46,7 +46,7 @@ footnotesize s = "{\\footnotesize " ++ s ++ "}"
 small s = "{\\small " ++ s ++ "}"
 
 textbf, textrm, textsc, textit :: String -> String
-textbf s = "\\textbf{" ++ s ++ "}"
+textbf s = s
 --textrm s = "\\textrm{" ++ s ++ "}"
 textrm s = s --remove for Matjax: It would be better to split out positional TeX that can't be handled by MathJax
 textsc s = "\\textsc{" ++ s ++ "}"
@@ -56,7 +56,7 @@ smalltextrm, smalltextit :: String -> String
 smalltextrm = textrm . small
 smalltextit = textit . small
 
-boldmath s = "\\boldmath " ++ s ++ "\\unboldmath "
+boldmath s = s
 
 overline s = "\\overline{" ++ s ++ "}"
 
@@ -69,7 +69,7 @@ texableGreekLetters = Set.fromList
      "Gamma", "Delta", "Theta", "Lambda", "Xi", "Pi", "Sigma", "Upsilon", "Phi", "Psi"]
 
 grey :: String -> String
-grey s = "\\grey{" ++ s ++ "}"
+grey s = "<span class=\"grey\">" ++ s ++ "</span>"
 
 ----------------------------------------------------------------------------------------------------
 
