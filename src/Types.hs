@@ -1,5 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Types where
 
@@ -12,8 +14,69 @@ import Control.Monad.Writer.Lazy (Writer, tell, runWriter, writer)
 import Data.Monoid
 import Data.List
 import Debug.Trace
+import Data.Aeson
+import GHC.Generics
 
 import TexBase
+
+----------------------------------------------------------------------------------------------------
+--STORAGE TYPES
+data ExpansionRecord =
+  ExpansionRecord{
+    expansionFrom::String,
+    expansionTo::String
+  }
+  deriving (Eq, Show, Read, Generic)
+
+instance FromJSON ExpansionRecord
+instance ToJSON ExpansionRecord
+
+data RewriteRecord =
+  RewriteRecord{
+    rewriteFrom::String,
+    rewriteTo::String
+  }
+  deriving (Eq, Show, Read, Generic)
+
+instance FromJSON RewriteRecord
+instance ToJSON RewriteRecord
+
+data LibraryRecord =
+  LibraryRecord{
+    libraryDescription::String,
+    libraryPremises::[String],
+    libraryConclusion::String
+  }
+  deriving (Eq, Show, Read, Generic)
+
+instance FromJSON LibraryRecord
+instance ToJSON LibraryRecord where
+    toJSON (LibraryRecord description premises conclusion) = object ["description" .= description, "premises" .= premises, "conclusion" .= conclusion]
+
+data ProblemRecord =
+  ProblemRecord{
+    problemID::Maybe String,
+    problemDescription::String,
+    problemPremises::[String],
+    problemConclusion::String
+  }
+  deriving (Eq, Show, Read, Generic)
+
+instance FromJSON ProblemRecord
+instance ToJSON ProblemRecord where
+    toJSON (ProblemRecord id description premises conclusion) = object ["id" .= id, "description" .= description, "premises" .= premises, "conclusion" .= conclusion]
+
+data SolutionRecord =
+  SolutionRecord{
+    writeupOfMoves::String,
+    tableauxSteps::[String]
+  }
+  deriving (Eq, Show, Read, Generic)
+
+instance FromJSON SolutionRecord
+instance ToJSON SolutionRecord where
+    toJSON (SolutionRecord writeupOfMoves tableauxSteps) = object ["writeupOfMoves" .= writeupOfMoves, "tableauxSteps" .= tableauxSteps]
+
 
 ----------------------------------------------------------------------------------------------------
 
@@ -69,7 +132,11 @@ type IsUnlocked = Bool
 data TableauName = TableauName IsUnlocked ID                                deriving (Eq, Ord, Show)
 
 data Tableau = Tableau TableauName [Variable] [Statement] Target
-             | Done TableauName                                             deriving (Eq, Ord, Show)
+             | Done TableauName                                             deriving (Eq, Ord, Show, Generic)
+
+--instance FromJSON Tableau
+instance ToJSON Tableau where
+   toJSON (tableau) = object ["lump" .= pretty(tableau)]
 
 data Target = Target [Either Statement [Tableau]] --tableaux are disjunctive
             | Contradiction                                                 deriving (Eq, Ord, Show)
@@ -106,6 +173,8 @@ instance Pretty Variable where
     pretty (Variable s id _ vtype d) =
         prettyVariableNameID s id ++ pretty vtype ++ pretty d
 
+instance Pretty VariableChoice where
+    pretty (VariableChoice v t) = "VariableChoice " ++ pretty v ++ pretty t
 
 instance Pretty Term where
     pretty (ApplyFn (Function "intersect") [a,b]) = pretty a ++ " cap " ++ pretty b

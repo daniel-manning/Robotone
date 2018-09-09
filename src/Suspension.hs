@@ -12,6 +12,7 @@ import Types
 import Move
 import Tex
 import RobotM
+import WriteupBase
 import Writeup
 
 ----------------------------------------------------------------------------------------------------

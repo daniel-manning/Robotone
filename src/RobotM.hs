@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module RobotM (
     oneOf,
     RobotM(..),
@@ -27,6 +29,7 @@ import Data.Foldable (msum)
 
 
 import Types
+import Data.Aeson hiding (Result)
 import Library
 import Printing
 
@@ -53,7 +56,14 @@ initialNextStatementIDs = Map.empty
 data RobotState = RobotState NextTableauID NextStatementIDs VarNameCount
 initialRobotState = RobotState initialNextTableauID initialNextStatementIDs Map.empty
 
+instance Pretty RobotState where
+    pretty (RobotState ntid nsid vnc) = "ntid: " ++ show ntid ++ " nsid: " ++ show nsid ++ " vnc: " ++ show vnc
+
+instance ToJSON RobotState where
+   toJSON (rs) = object ["lump" .= pretty(rs)]
+
 type RobotM = StateT RobotState (LogicT (ReaderT (PrintingData, Library) Identity))
+
 
 runRobotM :: PrintingData -> Library -> RobotState -> RobotM a -> Maybe (a, RobotState)
 runRobotM p l s ma = listToMaybe . runIdentity . flip runReaderT (p,l) . observeManyT 1 $ runStateT ma s

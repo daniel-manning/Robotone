@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module Writeup
+module Html.Writeup
   where
 
 
@@ -16,15 +16,10 @@ import Debug.Trace
 
 import Printing
 import Types
-import TexBase
-import Tex
 
 import WriteupBase
-----------------------------------------------------------------------------------------------------
-
-
-
-----------------------------------------------------------------------------------------------------
+import Html.TexBase
+import Html.Tex
 
 commaList :: [String] -> String
 commaList [] = error "commaList called with empty list"
@@ -99,7 +94,7 @@ instance Writeup Formula where
     writeup pd (Or fs) = orList $ writeup pd <$> fs
     writeup pd (Forall vs f) = math $ "\\forall " ++ commaList (writeup pd <$> vs) ++ ".(" ++ textrm (writeup pd f) ++ ")"
     writeup pd (UniversalImplies _ [f@(AtomicFormula _ _)] f'@(AtomicFormula _ _)) =
-        writeup pd f' ++ textrm " whenever " ++ writeup pd f
+        writeup pd f' ++ " whenever " ++ writeup pd f
     writeup pd (UniversalImplies _ [f] f') = "if " ++ writeup pd f ++ ", then " ++ writeup pd f'
     writeup pd (UniversalImplies vs fs f') = math $ "\\forall " ++ intercalate ", " (writeup pd <$> vs) ++
                                                ".(" ++ textrm (writeup pd (And fs)) ++ "\\Rightarrow " ++ textrm (writeup pd f') ++ ")"
@@ -193,56 +188,6 @@ writeupShow pd ss = "show that " ++ writeup pd ss
 extractFormulae :: [Statement] -> Formula
 extractFormulae [Statement _ f _] = f
 extractFormulae ss = And [f | Statement _ f _ <- ss]
-
-instance Writeup Clause where
-    writeup pd (StubClause s) = textbf $ "[" ++ s ++ "]"
-    writeup pd ProofDone = "we are done"
-    writeup pd (TargetReminder ss) = "[we are trying to " ++ writeupShow pd ss ++ ".]"
-    writeup pd (TargetIs ss) = "we would like to " ++ writeupShow pd ss
-    writeup pd (TargetIsIE ss s's) = "we would like to show that " ++ writeup pd ss ++ ", i.e. that " ++ writeup pd s's
-    writeup pd (Let as) = andList $ writeup pd <$> as
-    writeup pd (Take [v@(Variable _ _ TPositiveRealNumber _ _)]) = "let " ++ math (writeupIntro pd v)
-    writeup pd (Take vs) = "take " ++ andList (math . writeupIntro pd <$> vs)
-    writeup pd (Assertion ss) = writeup pd ss
-    writeup pd (WeMayTake vcs) = "we may therefore take " ++ andList (writeup pd <$> vcs)
-    writeup pd (ThereforeSettingDone vcs) = "therefore, setting " ++ andList (writeup pd <$> vcs) ++ ", we are done"
-    writeup pd (If as c) = writeup pd c ++ " if " ++ andList (writeup pd <$> as)
-    writeup pd (Whenever as c) = writeup pd c ++ " whenever " ++ andList (writeup pd <$> as)
-    writeup pd (Iff ss s's) = writeup pd ss ++ " if and only if " ++ writeup pd s's
-    writeup pd (AssumeNow ss) = "assume now that " ++ writeup pd ss
-    writeup pd (ExistVars [v] (Assertion ss)) =
-        "there exists " ++ writeupSuchThat pd [v] (extractFormulae ss)
-    writeup pd (ExistVars [v] c) =
-        "there exists " ++ math (writeupIntro pd v) ++ " such that " ++ writeup pd c
-    writeup pd (ExistVars vs c) =
-        "there exist " ++ andList (math . writeupIntro pd <$> vs) ++ " such that " ++ writeup pd c
-    writeup pd (Since ss False cs@[Assertion [Statement _ (AtomicFormula _ _) _]]) =
-        "since " ++ writeup pd ss ++ ", we have that " ++ writeup pd cs
-    writeup pd (Since ss f cs) = "since " ++ writeup pd ss ++ ", " ++ (guard f >> "it follows that ") ++ writeup pd cs
-    writeup pd (ByDefSince ss False cs@[Assertion [Statement _ (AtomicFormula _ _) _]]) =
-        "by definition, since " ++ writeup pd ss ++ ", we have that " ++ writeup pd cs
-    writeup pd (ByDefSince ss f cs) = "by definition, since " ++ writeup pd ss ++ ", " ++ (guard f >> "it follows that ") ++ writeup pd cs
-    writeup pd (WeKnowThat cs) = "we know " ++ andList (("that " ++) . writeup pd <$> cs)
-    writeup pd (But c) = "but " ++ writeup pd c
-    writeup pd ClearlyTheCaseDone = "but this is clearly the case, so we are done"
-
-instance Writeup [Clause] where
-    writeup pd cs = andList $ writeup pd <$> cs
-
-instance Writeup Adverb where
-    writeup _ Then = "then"
-    writeup _ So = "so"
-    writeup _ Also = "also"
-    writeup _ AndA = "and"
-    writeup _ IE = "that is,"
-    writeup _ Therefore = "therefore"
-    writeup _ Thus = "thus"
-
-instance Writeup Unit where
-    writeup pd (Unit (Just a) cs@(Since{}:_))
-        | a /= IE = writeup pd a ++ ", " ++ writeup pd cs
-    writeup pd (Unit (Just a) cs) = writeup pd a ++ " " ++ writeup pd cs
-    writeup pd (Unit Nothing cs) = writeup pd cs
 
 asSentence :: String -> String
 asSentence (c:cs) = (toUpper c:cs) ++ (guard (length cs >= 2 && last cs /= ']') >> ".")

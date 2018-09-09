@@ -1,7 +1,7 @@
 #!/bin/bash
 wd=$(dirname "$0")
 
-xelatex=$(which xelatex)
+xelatex=$(which tex)
 if [$xelatex == ""]
 then
    xelatex=$(which pdflatex)
