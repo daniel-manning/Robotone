@@ -45,7 +45,7 @@ import Html.Writeup
 import WriteupBase
 
 type Homepage = H.Html
-
+--type ProblemID = Int
 --ROUTES
 type Api =
   {-"home" :> Get '[HTML] Homepage :<|>-}
@@ -59,7 +59,7 @@ type Api =
   "problem" :> ReqBody '[JSON] ProblemRecord :> Post '[JSON] ProblemRecord :<|>
 {-  "solutionStep" :> Get '[JSON] [ProblemStep] :<|>
   "solutionStep" :> ReqBody '[JSON] ProblemStep :> Post '[JSON] ProblemStep :<|>-}
-  "createInitialTableau" :> Get '[JSON] SolutionRecord :<|> -- :> ReqBody '[JSON] ProblemSetup :>
+  "solution" :> Capture "problemID" Int :> Get '[JSON] SolutionRecord :<|> -- :> ReqBody '[JSON] ProblemSetup :>
   Raw
 
 
@@ -93,7 +93,7 @@ server dbh =
   postProblem :<|>
   {-getSolutionStep :<|>
   postSolutionStep :<|>-}
-  createInitialTableau :<|>
+  solution :<|>
   staticServer
   where
     getExpansions :: Handler [ExpansionRecord]
@@ -126,8 +126,10 @@ server dbh =
     postSolutionStep :: ProblemStep -> Handler ProblemStep
     postSolutionStep problem = liftIO $ addProblem dbh problem-}
 
-    createInitialTableau :: Handler SolutionRecord
-    createInitialTableau = return(printSolution 100 (Problem "If $f$ is a continuous function and $(a_n) \to a$, then $(f(a_n)) \to f(a)$" ["continuous(f)","tendsto(an,a)"] "tendsto(applyfnpointwise(f,an),applyfn(f,a))"))
+    solution :: Int ->  Handler SolutionRecord
+    solution pID = do
+                       p <- liftIO (getProblemRecord pID dbh)
+                       return(printSolution 100 (Problem (problemDescription p) (problemPremises p) (problemConclusion p)))
 
     staticServer :: ServerT Raw m
     staticServer = serveDirectoryWebApp "static-files"
@@ -190,10 +192,8 @@ server dbh =
         "<div class=\"writeup-step\">" ++ (unwords (asSentence . writeup pd <$> clauses)) ++ "</div>"]
 
     printSolution :: Int -> Problem -> SolutionRecord
-    printSolution max p =
+    printSolution max p@(Problem _ hs t) =
       let
-          hs = ["continuous(f)", "tendsto(an,a)"]
-          t = "tendsto(applyfnpointwise(f,an),applyfn(f,a))"
           pd = TestData.printingData
           lib = TestData.library
           initialTableauM = createTableau False (parse formula <$> hs) $ parse formula t

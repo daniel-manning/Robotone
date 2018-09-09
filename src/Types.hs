@@ -55,6 +55,7 @@ instance ToJSON LibraryRecord where
 
 data ProblemRecord =
   ProblemRecord{
+    problemID::Maybe String,
     problemDescription::String,
     problemPremises::[String],
     problemConclusion::String
@@ -63,7 +64,7 @@ data ProblemRecord =
 
 instance FromJSON ProblemRecord
 instance ToJSON ProblemRecord where
-    toJSON (ProblemRecord description premises conclusion) = object ["description" .= description, "premises" .= premises, "conclusion" .= conclusion]
+    toJSON (ProblemRecord id description premises conclusion) = object ["id" .= id, "description" .= description, "premises" .= premises, "conclusion" .= conclusion]
 
 data SolutionRecord =
   SolutionRecord{

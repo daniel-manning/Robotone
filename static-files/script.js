@@ -13,6 +13,7 @@ $(document).on('click', '#problem-button', function(){ $.ajax({
      type: "POST",
      data: createJsonObjectWithProblemArray("#problem"),
      success: function( result ) {
+      $( "#problem-id" ).html(result.id);
       $( "#problem-workspace-start" ).toggleClass("hidden");
       $( "#problem-spec" ).html("<p id=\"desc\">" + result.description+"</p>");
       MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
@@ -81,7 +82,7 @@ $(document).on('click', '#problem-button', function(){ $.ajax({
      'Content-Type': 'application/json'
     },
     type: "GET",
-    url: "/createInitialTableau",
+    url: "/solution/" + $("#problem-id").html(),
     data: "{}",
     dataType: "json",
     success: function( result ) {

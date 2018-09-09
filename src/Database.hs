@@ -7,6 +7,7 @@ module Database (
   getLibraryRecords,
   addLibrary,
   getProblemRecords,
+  getProblemRecord,
   addProblem
 ) where
 
@@ -44,8 +45,9 @@ setupDB dbh =
            return ()
      when (not ("problem" `elem` tables)) $
         do run dbh "CREATE TABLE problem (\
+                     \id INTEGER PRIMARY KEY AUTOINCREMENT,\
                      \description TEXT NOT NULL, \
-                     \premises TEXT PRIMARY KEY NOT NULL, \
+                     \premises TEXT NOT NULL, \
                      \conclusion TEXT NOT NULL)" []
            return ()
      commit dbh
@@ -152,11 +154,32 @@ getProblemRecords dbh =  handleSql errorHandler $
                                           do fail $ "Error getting rewrite:\n"
                                                  ++ show e
 
-                                     retrieveProblemRecord [] = ProblemRecord{problemDescription = "", problemPremises = [""],  problemConclusion = ""}
-                                     retrieveProblemRecord [sqlDescription, sqlPremises, sqlConclusion] = ProblemRecord{problemDescription = fromSql sqlDescription,
+                                     retrieveProblemRecord [] = ProblemRecord{problemID = Nothing, problemDescription = "", problemPremises = [""],  problemConclusion = ""}
+                                     retrieveProblemRecord [sqlID, sqlDescription, sqlPremises, sqlConclusion] = ProblemRecord{
+                                                                                                                        problemID = Just (fromSql sqlID),
+                                                                                                                        problemDescription = fromSql sqlDescription,
                                                                                                                         problemPremises = extractList sqlPremises,
                                                                                                                         problemConclusion = fromSql sqlConclusion}
-                                     retrieveProblemRecord x = ProblemRecord{problemDescription = "", problemPremises = [""],  problemConclusion = ""}
+                                     retrieveProblemRecord x = ProblemRecord{problemID = Nothing, problemDescription = "", problemPremises = [""],  problemConclusion = ""}
+                                     extractList::SqlValue -> [String]
+                                     extractList s = splitRegex (mkRegex "@") (fromSql s)
+
+getProblemRecord :: IConnection conn => Int -> conn -> IO ProblemRecord
+getProblemRecord recordID dbh =  handleSql errorHandler $
+                               do print "getProblemRecord"
+                                  r <- quickQuery' dbh "SELECT * FROM problem where id = ?" [toSql recordID]
+                                  return $ head $ map retrieveProblemRecord r
+                               where errorHandler e =
+                                          do fail $ "Error getting rewrite:\n"
+                                                 ++ show e
+
+                                     retrieveProblemRecord [] = ProblemRecord{problemID = Nothing, problemDescription = "", problemPremises = [""],  problemConclusion = ""}
+                                     retrieveProblemRecord [sqlID, sqlDescription, sqlPremises, sqlConclusion] = ProblemRecord{
+                                                                                                                        problemID = Just (fromSql sqlID),
+                                                                                                                        problemDescription = fromSql sqlDescription,
+                                                                                                                        problemPremises = extractList sqlPremises,
+                                                                                                                        problemConclusion = fromSql sqlConclusion}
+                                     retrieveProblemRecord x = ProblemRecord{problemID = Nothing, problemDescription = "", problemPremises = [""],  problemConclusion = ""}
                                      extractList::SqlValue -> [String]
                                      extractList s = splitRegex (mkRegex "@") (fromSql s)
 
@@ -172,8 +195,11 @@ addProblem dbh problem = handleSql errorHandler $
                                      reduceList sl = intercalate "@" sl
                                      extractList::SqlValue -> [String]
                                      extractList s = splitRegex (mkRegex "@") (fromSql s)
-                                     retrieveProblemRecord [] = ProblemRecord{problemDescription = "", problemPremises = [""], problemConclusion = ""}
-                                     retrieveProblemRecord [sqlDescription, sqlPremises, sqlConclusion] = ProblemRecord{problemDescription = fromSql sqlDescription,
+                                     retrieveProblemRecord [] = ProblemRecord{problemID = Nothing, problemDescription = "", problemPremises = [""], problemConclusion = ""}
+                                     retrieveProblemRecord [sqlID, sqlDescription, sqlPremises, sqlConclusion] = ProblemRecord{
+                                                                                                                        problemID = Just (fromSql sqlID),
+                                                                                                                        problemDescription = fromSql sqlDescription,
                                                                                                                         problemPremises = extractList sqlPremises,
                                                                                                                         problemConclusion = fromSql sqlConclusion}
-                                     retrieveProblemRecord x = ProblemRecord{problemDescription = "", problemPremises = [""], problemConclusion = ""}
+                                     retrieveProblemRecord x = ProblemRecord{problemID = Nothing, problemDescription = "", problemPremises = [""], problemConclusion = ""}
+
