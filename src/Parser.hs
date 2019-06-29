@@ -45,6 +45,8 @@ conventionalTypes = Map.fromList [
     ("f", TFunction),
     ("g", TFunction),
     ("h", TFunction),
+    ("j", TNaturalNumber),
+    ("k", TNaturalNumber),
     ("l", TNaturalNumber),
     ("m", TNaturalNumber),
     ("n", TNaturalNumber),
