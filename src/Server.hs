@@ -44,6 +44,9 @@ import Html.TexBase
 import Html.Writeup
 import WriteupBase
 
+---
+import Debug.Trace
+
 type Homepage = H.Html
 --type ProblemID = Int
 --ROUTES
@@ -154,8 +157,8 @@ server dbh =
          deleteUnmatchable, -- move 3
        --Tidying (4-9)
          peelAndSplitUniversalConditionalTarget, --move 4
-     --    flipNegativeTarget, --move 5
-     --    flipNegativeHypothesis, --move 6
+         flipNegativeTarget, --move 5
+         flipNegativeHypothesis, --move 6
          splitDisjunctiveHypothesis, --move 7
      --    splitConjunctiveTarget, --move 8
          splitDisjunctiveTarget,
@@ -198,8 +201,8 @@ server dbh =
           lib = TestData.library
           initialTableauM = createTableau False (parse formula <$> hs) $ parse formula t
           Just(initialTableau, s) = runRobotM pd lib initialRobotState initialTableauM
-          moves = movesFrom s initialTableau
-          (moveDescriptions, outputTableaux) = unzip moves
+          moves = trace ("finding moves from " ++ show s) $ movesFrom s initialTableau
+          (moveDescriptions, outputTableaux) = trace ("unzipping moves " ++ show moves) $ unzip moves
           proof = compress . eliminate . fuse $ concat [cs | MoveDescription _ cs _ <- moveDescriptions]
 
       in  if null moves

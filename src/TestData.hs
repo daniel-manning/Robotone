@@ -1,5 +1,5 @@
 module TestData (
-    problems, library, printingData
+    problems, library, printingData, expansionTable
 ) where
 
 import Prelude hiding ((/))
@@ -101,6 +101,10 @@ expansionTableSource = [
     ("complete(A)", "forall an.(cauchy(an) & sequencein(an,A) => convergesin(an,A))"),
     ("converges(an)", "exists a.(tendsto(an,a))"),
     ("convergesin(an,A)", "exists a.(in(a,A) & tendsto(an,a))"),
+    ("coprime(l,m)", "equals(gcd(l,m),1)"),
+    ("perfectSquare(n)", "exists m.(equals(times(m,m),n))"),
+    ("rational(n)", "exists m.( exists l.(equals(times(n,l),m) & coprime(l,m)))"),
+    ("irrational(n)", "¬rational(n)"),
     ("closed(A)", "forall an a.(sequencein(an,A) & tendsto(an,a) => in(a,A))"),
     ("denseon(A,B)", "forall x epsilon.(in(x,B) => exists y.(in(y,A) & lessthan(d(x,y), epsilon)))"),
     ("cauchy(an)", "forall epsilon.(exists N.(forall m n.(atleast(m,N) & atleast(n,N) => lessthan(d(kthterm(an,m),kthterm(an,n)),epsilon))))"),
@@ -160,6 +164,8 @@ formulaPatterns' = Map.fromList [
     ("closedin", "$%$ is closed in $%$"),
     ("sequencein", "$%$ is a sequence in $%$"),
     ("injection", "$%$ is an injection"),
+    ("rational", "$%$ is rational"),
+    ("irrational", "$%$ is irrational"),
     ("continuous", "$%$ is continuous"),
     ("cauchy", "$%$ is Cauchy"),
     ("converges", "$%$ converges"),
@@ -167,7 +173,9 @@ formulaPatterns' = Map.fromList [
     ("mapsto", "$%:%\\mapsto %$"),
     ("subgroup", "$%$ is a subgroup"),
     ("closedunderinverse", "$%$ is closed under taking inverses"),
-    ("closedundermultiplication", "$%$ is closed under multiplication")
+    ("closedundermultiplication", "$%$ is closed under multiplication"),
+    ("sqrt", "$% \\sqrt %$"),
+    ("times", "$%$ * $%$")
   ]
 
 nounPatterns' :: Map String Pattern

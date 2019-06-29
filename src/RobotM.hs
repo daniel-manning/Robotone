@@ -53,7 +53,7 @@ initialNextTableauID = 1
 type NextStatementIDs = Map StatementType Int
 initialNextStatementIDs = Map.empty
 
-data RobotState = RobotState NextTableauID NextStatementIDs VarNameCount
+data RobotState = RobotState NextTableauID NextStatementIDs VarNameCount deriving Show
 initialRobotState = RobotState initialNextTableauID initialNextStatementIDs Map.empty
 
 instance Pretty RobotState where

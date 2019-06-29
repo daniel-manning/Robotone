@@ -14,7 +14,7 @@ import Control.Monad.Identity hiding (msum)
 import Data.Either
 import Data.List (nub, sort, intersect)
 import Data.Maybe
-import Data.Map hiding (map, filter, null)
+import Data.Map hiding (map, filter, null, foldl)
 import Data.Foldable (msum)
 
 import Types
@@ -34,6 +34,8 @@ data MoveDescription = MoveDescription [StatementName] [Clause] String
 instance ToJSON MoveDescription where
    toJSON (MoveDescription sns cs s) = object ["sns" .= map pretty sns, "cs" .= map pretty cs, "s" .= s]
 
+instance Show MoveDescription where
+   show (MoveDescription sns cs s) = "MoveDescription (sns: " ++ (foldl (++) [] $ map pretty sns) ++ " cs: " ++ (foldl (++) [] $ map pretty cs) ++ " s: " ++ s ++ " )"
 
 newtype MoveType = MoveType (Tableau -> RobotM (MoveDescription, Tableau))
 

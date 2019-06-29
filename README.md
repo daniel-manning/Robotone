@@ -35,3 +35,9 @@ xelatex "\def\showsteps{1} \input{robotone.tex}"
 ```
 
 Note, the TeX file requires the libertine.sty fonts, available in Debial from `texlive-fonts-extra`.
+
+Server can be run with:
+
+```
+stack exec robotone-exe
+```

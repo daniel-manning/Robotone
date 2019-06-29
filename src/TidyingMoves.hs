@@ -123,7 +123,7 @@ splitDisjunctiveHypothesis = tableauwise onTableau where
         copiedTs <- mapM copyTarget [t | _ <- disjunctHs]
         newTableaux <- zipWithM (createTableau' False) (return <$> disjunctHs) copiedTs
 
-        return (MoveDescription [n] [StubClause "Split disjunctive hypothesis"] $ "Split into cases to handle disjunctive hypothesis " ++ texSN n ++ ".",
+        return (MoveDescription [n] [StubClause "Consider the alternatives"] $ "Split into cases to handle disjunctive hypothesis " ++ texSN n ++ ".",
                 s . Tableau tID tVs (context []) . Target $ Right . return <$> newTableaux)
 
     onTableau _ _ _ = mzero
