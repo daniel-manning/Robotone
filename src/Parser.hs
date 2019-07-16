@@ -97,10 +97,16 @@ variable = do
     let t = Map.findWithDefault (error $ "Variable " ++ n ++ " does not have a conventional type.") n conventionalTypes
     return $ Variable n (length ps + 1) t VTNormal (Dependencies [] [])
 
+constant :: Parser Constant
+constant = do
+    n <- many1 alphaNum
+    return $ Constant n 1 {-For now-} TNaturalNumber {-This could get very complicated-}
+
 term :: Parser Term
 term = tryInTurn [
     ApplyFn <$> function <*> bracketed (sepBy term (try $ punct ",")),
-    VariableTerm <$> variable
+    VariableTerm <$> variable,
+    ConstantTerm <$> constant
   ]
 
 

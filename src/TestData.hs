@@ -228,6 +228,12 @@ library = Library [
         parse formula "sequencein(an,F)",
         parse formula "tendsto(an,a)"]
         (parse formula "in(a,F)"),
+    Result "Natural numbers are reflexive" [] (parse formula "equals(n, n)"),
+    Result "Natural numbers are Symmetric" [parse formula "equals(n, m)"] (parse formula "equals(m, n)"),
+    Result "Natural numbers are Transitive" [
+        parse formula "equals(l, m)",
+        parse formula "equals(m, n)"
+        ] (parse formula "equals(l, n)"),
     Result "" [parse formula "issameas(A,complement(B))"] (parse formula "equals(twoBack(f,A),complement(preimage(f,B)))")
  ][
     Solution [parse variable "eta"] [

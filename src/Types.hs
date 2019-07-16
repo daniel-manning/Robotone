@@ -94,8 +94,10 @@ data VariableType = VTNormal | VTDiamond | VTBullet                         deri
 data Dependencies = Dependencies [Term] {-dep-} [Term] {-indep-}            deriving (Eq, Ord, Show)
 
 data Variable = Variable String ID Type_ VariableType Dependencies          deriving (Eq, Ord, Show)
+data Constant = Constant String ID Type_                                    deriving (Eq, Ord, Show)
 
 data Term = VariableTerm Variable
+          | ConstantTerm Constant
           | ApplyFn Function [Term]                                         deriving (Eq, Ord, Show)
 
 data Formula = AtomicFormula Predicate [Term]
