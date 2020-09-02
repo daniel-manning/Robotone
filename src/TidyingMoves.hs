@@ -30,7 +30,6 @@ import TexBase
 import Tex
 import RobotM
 import Expansion
-import WriteupBase
 import Writeup
 
 ----------------------------------------------------------------------------------------------------
@@ -56,7 +55,7 @@ peelBareUniversalTarget = tableauwise onTableau where
     onTableau :: [Statement] -> Surroundings -> Tableau -> RobotM (MoveDescription, Tableau)
     onTableau _ s tableau@(Tableau tID tVs hs (Target [Left (Statement n (Forall vs c) _)])) = do
         c' <- createStatement STTarget c
-        return (MoveDescription [n] [Take vs] $ "Apply `let' trick and move premise of universal target " ++ texSN n ++ " above the line.",
+        return (MoveDescription [n] [Take vs] $ "pply `let' trick and move premise of universal target " ++ texSN n ++ " above the line.",
                 markBulletedIndependencies vs . s $ Tableau tID (tVs ++ vs) hs (Target [Left c']))
     onTableau _ _ _ = mzero
 

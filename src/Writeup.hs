@@ -19,10 +19,11 @@ import Types
 import TexBase
 import Tex
 
-import WriteupBase
+
 ----------------------------------------------------------------------------------------------------
 
-
+class Writeup a where
+    writeup :: PrintingData -> a -> String
 
 ----------------------------------------------------------------------------------------------------
 
@@ -119,6 +120,38 @@ instance Writeup [Statement] where
     writeup pd ss = andList $ writeup pd <$> ss
 
 ----------------------------------------------------------------------------------------------------
+
+type Follows = Bool
+
+data Clause = StubClause String
+            | ProofDone                     -- we are done
+            | TargetReminder [Statement]    -- we are trying to show X
+            | TargetIs [Statement]          -- we would like to show X
+            | TargetIsIE [Statement] [Statement]         -- we would like to show X, i.e. Y
+            | Let [LetArgs]
+            | Take [Variable]
+            | Assertion [Statement]         -- X
+            | WeMayTake [VariableChoice]            -- we may therefore take x = T
+            | ThereforeSettingDone [VariableChoice] -- therefore, setting x = T, we are done
+            | If [Statement] Statement --P and P' if Q
+            | Whenever [Statement] Statement --P and P' whenever Q
+            | Iff [Statement] [Statement]
+            | AssumeNow [Statement]
+            | ClearlyTheCaseDone  -- But this is clearly the case, so we are done
+
+            | ExistVars [Variable] Clause
+            | Since [Statement] Follows [Clause]
+            | ByDefSince [Statement] Follows [Clause]
+            | WeKnowThat [Clause]
+            | But Clause  --may turn into an adverb
+
+data LetArgs = BeSuchThat [Variable] [Statement]  -- let x and y be be s.t X
+             | Suspended [Variable]                 -- let x be a constant to be chosen later
+--             | Unconstrained Variable             -- let epsilon > 0
+
+data Adverb = Then | So  | Also | AndA | IE | Therefore | Thus   deriving Eq
+
+data Unit = Unit (Maybe Adverb) [Clause]
 
 since :: [Statement] -> Clause -> Clause
 since [] c = c
