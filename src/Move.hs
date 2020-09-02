@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Move
 
  where
@@ -19,9 +17,8 @@ import Data.Foldable (msum)
 
 import Types
 import RobotM
-import WriteupBase
 import Writeup
-import Data.Aeson
+
 
 ----------------------------------------------------------------------------------------------------
 
@@ -30,16 +27,11 @@ import Data.Aeson
 
 
 data MoveDescription = MoveDescription [StatementName] [Clause] String
-
-instance ToJSON MoveDescription where
-   toJSON (MoveDescription sns cs s) = object ["sns" .= map pretty sns, "cs" .= map pretty cs, "s" .= s]
-
-
 newtype MoveType = MoveType (Tableau -> RobotM (MoveDescription, Tableau))
 
 movetypeFromSubmovetypes :: [MoveType] -> MoveType
 movetypeFromSubmovetypes ms = MoveType $ \t -> msum [f t | MoveType f <- ms]
----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 type Surroundings = Tableau -> Tableau
 

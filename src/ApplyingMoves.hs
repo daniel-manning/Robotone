@@ -32,7 +32,6 @@ import TexBase
 import Tex
 import RobotM
 import Library
-import WriteupBase
 import Writeup
 
 --TODO: rename tID to tN in this and other files
