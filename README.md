@@ -11,7 +11,7 @@ Install `haskell-stack`, which is a reproducible build system for haskell. Also 
 
 ``` bash
 # in our project directory
-git clone https://github.com/EdAyers/Robotone.git
+git clone https://github.com/daniel-manning/Robotone.git
 cd Robotone
 stack build
 ```
